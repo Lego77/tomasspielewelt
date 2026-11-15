@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tomas Spielwelt – Lernen & Spielen</title>
+<meta name="description" content="Kostenlose Lernspiele und Übungshefte für Kinder: Rechnen und Deutsch für Klasse 1 und 2, Geo-Quiz und lustige Spiele.">
+<script src="sync.js" data-hub></script>
+<style>
+  :root{--bg:#fff7ec;--ink:#24204a;--muted:#6b6790;--card:#fff;--accent:#ff7a3d;--accent2:#5b5bf0;--ok:#2fbf71;--bad:#e5484d;--line:#efe6d8}
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%;background:var(--bg);color:var(--ink);font-family:"Nunito","Avenir Next",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-tap-highlight-color:transparent}
+  body{padding:calc(16px + env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom));
+    background-image:radial-gradient(circle at 10% 0%,#ffe1c7 0,transparent 40%),radial-gradient(circle at 100% 30%,#e3e2ff 0,transparent 35%)}
+  .wrap{max-width:760px;margin:0 auto}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+  .logo{font-size:38px;line-height:1}
+  h1{font-size:26px;font-weight:900;letter-spacing:-.3px}
+  h1 small{display:block;font-size:14px;font-weight:700;color:var(--muted);letter-spacing:0}
+  h2{font-size:22px;font-weight:900;margin-bottom:12px}
+  .panel{background:var(--card);border-radius:26px;padding:22px;box-shadow:0 10px 30px rgba(60,40,10,.08)}
+  .hidden{display:none!important}
+  .muted{color:var(--muted)}
+  button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:18px;padding:14px 20px;font-size:18px;font-weight:900;
+    background:var(--accent);color:#fff;box-shadow:0 5px 0 #c9541c}
+  .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #c9541c}
+  .btn.blau{background:var(--accent2);box-shadow:0 5px 0 #3b3bb8}
+  .btn.leise{background:#f1ecff;color:var(--accent2);box-shadow:none;font-size:16px;padding:11px 16px}
+  .btn.breit{width:100%}
+  .btn:disabled{opacity:.5}
+
+  /* Spieler-Auswahl */
+  .kids{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:12px;margin:6px 0 18px}
+  .kid{background:#fff8f0;border:3px solid var(--line);border-radius:22px;padding:14px 6px 12px;text-align:center;position:relative}
+  .kid:active{transform:scale(.97)}
+  .kid .ava{font-size:46px;display:block;line-height:1.1}
+  .kid b{display:block;font-size:17px;margin-top:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .kid .x{position:absolute;top:4px;right:6px;font-size:14px;color:var(--muted);padding:4px}
+  .kid.neu{border-style:dashed;background:#fff}
+
+  /* Formular */
+  label.feld{display:block;font-weight:800;margin:14px 0 6px}
+  input[type=text]{width:100%;font:inherit;font-size:22px;font-weight:800;padding:13px 16px;border-radius:16px;border:3px solid var(--line);background:#fffdf9;color:var(--ink)}
+  input[type=text]:focus{outline:none;border-color:var(--accent2)}
+  .avas{display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+  .avas button{font-size:30px;border-radius:14px;padding:6px 0;border:3px solid transparent;background:#fff8f0}
+  .avas button.an{border-color:var(--accent2);background:#ecebff}
+
+  /* PIN-Feld */
+  .pinkopf{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+  .pinkopf .ava{font-size:52px}
+  .dots{display:flex;gap:14px;justify-content:center;margin:18px 0}
+  .dots i{width:22px;height:22px;border-radius:50%;border:3px solid var(--accent2);display:block}
+  .dots i.voll{background:var(--accent2)}
+  .dots.wackel{animation:wackel .4s}
+  @keyframes wackel{20%,60%{transform:translateX(-10px)}40%,80%{transform:translateX(10px)}}
+  .pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;max-width:330px;margin:0 auto}
+  .pad button{font-size:28px;font-weight:900;padding:14px 0;border-radius:18px;background:#f4f1ff;box-shadow:0 4px 0 #dcd6ff}
+  .pad button:active{transform:translateY(3px);box-shadow:0 1px 0 #dcd6ff}
+  .pad .leer{visibility:hidden}
+  .meldung{min-height:24px;text-align:center;font-weight:800;margin-top:12px}
+  .meldung.bad{color:var(--bad)}
+  .hilfe{text-align:center;margin-top:14px;font-size:14.5px}
+
+  /* Spiele */
+  .hallo{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+  .hallo .ava{font-size:50px}
+  .hallo h2{margin:0}
+  .hallo .rechts{margin-left:auto;text-align:right}
+  .wolke{font-size:13.5px;font-weight:800;color:var(--muted);display:flex;align-items:center;gap:6px;justify-content:flex-end;margin-top:4px}
+  .wolke i{width:10px;height:10px;border-radius:50%;background:var(--ok);display:inline-block}
+  .wolke[data-s=wartet] i,.wolke[data-s=speichert] i{background:#f5b301}
+  .wolke[data-s=offline] i{background:var(--bad)}
+  .spiele{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px}
+  .spiel{display:flex;gap:14px;align-items:center;text-align:left;text-decoration:none;color:inherit;background:var(--card);
+    border-radius:24px;padding:16px;box-shadow:0 8px 22px rgba(60,40,10,.08);border:3px solid transparent}
+  .spiel:active{transform:scale(.98)}
+  .spiel:hover{border-color:#ffd9c2}
+  .spiel .ico{font-size:40px;width:64px;height:64px;border-radius:20px;display:flex;align-items:center;justify-content:center;flex:none}
+  .spiel b{font-size:18px;display:block}
+  .spiel span{font-size:14px;color:var(--muted);display:block;margin-top:2px;line-height:1.3}
+  .abschnitt{font-size:14px;font-weight:900;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);margin:22px 4px 10px}
+  .fuss{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:26px}
+  .hinweis{background:#fff1e8;border:2px solid #ffd2b8;border-radius:18px;padding:14px 16px;margin-bottom:16px;font-weight:700;line-height:1.4}
+  .laden{text-align:center;padding:50px 0;font-size:20px;font-weight:800}
+  .laden .dreh{font-size:44px;display:inline-block;animation:dreh 1.2s linear infinite}
+  @keyframes dreh{to{transform:rotate(360deg)}}
+  /* Besucher, Gästebuch, Nachricht */
+  .extra{margin-top:30px}
+  .extra .panel{padding:16px}
+  .extra iframe.zaehler{width:100%;height:150px;border:0;display:block}
+  .extra .knoepfe{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+  .extra .knoepfe .btn{flex:1;min-width:150px}
+  .fenster{position:fixed;inset:0;z-index:50;background:rgba(36,32,74,.55);display:flex;align-items:center;justify-content:center;padding:14px}
+  .fenster .innen{background:#fff;border-radius:24px;width:min(640px,100%);height:min(720px,92vh);display:flex;flex-direction:column;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35)}
+  .fenster .kopf{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:2px solid var(--line);font-weight:900;font-size:19px}
+  .fenster .kopf button{font-size:26px;line-height:1;padding:4px 8px}
+  .fenster iframe{flex:1;width:100%;border:0}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="logo">🎪</div>
+    <h1>Tomas Spielwelt<small>Lernen &amp; Spielen</small></h1>
+  </header>
+
+  <div id="nichtVerbunden" class="hinweis hidden">
+    ⚙️ Die Spielwelt ist noch nicht mit dem Google Sheet verbunden. Trage die Web-App-Adresse oben in <code>sync.js</code> ein.
+    Bis dahin wird nur auf diesem Gerät gespeichert.
+  </div>
+
+  <!-- Laden -->
+  <section id="vLaden" class="laden"><div class="dreh">🎡</div><p id="ladeText">Einen Moment …</p></section>
+
+  <!-- Wer spielt? -->
+  <section id="vWer" class="panel hidden">
+    <h2>Wer spielt?</h2>
+    <div class="kids" id="kids"></div>
+    <p class="muted" id="werHilfe" style="font-size:14.5px">Tippe auf deinen Namen. Neu hier? Dann lege dich als neuen Spieler an.</p>
+  </section>
+
+  <!-- Name eingeben -->
+  <section id="vName" class="panel hidden">
+    <h2 id="nameTitel">Neuer Spieler</h2>
+    <label class="feld" for="name">Dein Name</label>
+    <input type="text" id="name" maxlength="20" autocomplete="off" autocapitalize="words" spellcheck="false" placeholder="z. B. Tomas">
+    <div id="avaBox">
+      <label class="feld">Such dir ein Bild aus</label>
+      <div class="avas" id="avas"></div>
+    </div>
+    <div class="meldung bad" id="nameMsg"></div>
+    <div style="display:flex;gap:10px;margin-top:14px">
+      <button class="btn leise" id="nameZurueck">← Zurück</button>
+      <button class="btn blau" id="nameWeiter" style="flex:1">Weiter</button>
+    </div>
+  </section>
+
+  <!-- PIN -->
+  <section id="vPin" class="panel hidden">
+    <div class="pinkopf"><span class="ava" id="pinAva">🙂</span><div><h2 id="pinName" style="margin:0">…</h2><div class="muted" id="pinFrage">Gib deine Geheimzahl ein</div></div></div>
+    <div class="dots" id="dots"><i></i><i></i><i></i><i></i></div>
+    <div class="pad" id="pad"></div>
+    <div class="meldung" id="pinMsg"></div>
+    <div class="hilfe muted" id="pinHilfe">PIN vergessen? Frag einen Erwachsenen – der kann sie zurücksetzen.</div>
+    <div style="text-align:center;margin-top:14px"><button class="btn leise" id="pinZurueck">← Zurück</button></div>
+  </section>
+
+  <!-- Spiele -->
+  <section id="vSpiele" class="hidden">
+    <div class="hallo">
+      <span class="ava" id="hAva">🙂</span>
+      <div><div class="muted" style="font-weight:800">Hallo,</div><h2 id="hName">…</h2></div>
+      <div class="rechts">
+        <button class="btn leise" id="wechseln">👋 Abmelden</button>
+        <div class="wolke" id="wolke" data-s="ok"><i></i><span id="wolkeText">Gespeichert</span></div>
+      </div>
+    </div>
+    <div id="offlineHinweis" class="hinweis hidden">📡 Keine Verbindung zum Speicher. Du kannst trotzdem spielen – dein Fortschritt wird gesichert, sobald wieder Internet da ist.</div>
+    <div id="liste"></div>
+  </section>
+  <!-- Besucher, Gästebuch, Nachricht -->
+  <section class="extra" id="extra">
+    <div class="panel">
+      <iframe class="zaehler" id="zaehler" title="Besucherzähler" loading="lazy"></iframe>
+      <div class="knoepfe">
+        <button class="btn leise" data-fenster="gaestebuch">📖 Gästebuch</button>
+        <button class="btn leise" data-fenster="nachricht">✉️ Nachricht schreiben</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="fenster hidden" id="fenster" role="dialog" aria-modal="true">
+  <div class="innen">
+    <div class="kopf"><span id="fensterTitel"></span><button type="button" id="fensterZu" aria-label="Schließen">✕</button></div>
+    <iframe id="fensterRahmen" title=""></iframe>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  var $ = function (id) { return document.getElementById(id); };
+  var SW = window.Spielwelt;
+
+  /* ---------- Deine Spiele (neue einfach hier ergänzen) ---------- */
+  var SPIELE = [
+    { gruppe: 'Üben & Lernen', datei: 'rechenheft.html', ico: '🔢', farbe: '#e3f4ff', titel: 'Mein Rechenheft', text: 'Rechnen für Klasse 1 und 2' },
+    { gruppe: 'Üben & Lernen', datei: 'deutschheft.html', ico: '✏️', farbe: '#fff0d9', titel: 'Mein Deutschheft', text: 'Deutsch üben für Klasse 2' },
+    { gruppe: 'Üben & Lernen', datei: 'weltenbummler.html', ico: '🌍', farbe: '#e1f7e8', titel: 'Weltenbummler', text: 'Quiz über Länder, Erde und Weltall' },
+    { gruppe: 'Spiele', datei: 'freizeitpark.html', ico: '🎢', farbe: '#ffe3ef', titel: 'Mein Freizeitpark', text: 'Baue deinen eigenen Freizeitpark' },
+    { gruppe: 'Spiele', datei: 'insel.html', ico: '🏝️', farbe: '#dff6f4', titel: 'Insel-Überleben', text: 'Stamm der Geister' },
+    { gruppe: 'Spiele', datei: 'basketball.html', ico: '🏀', farbe: '#ffe8da', titel: 'Flick Shot', text: 'Wirf den Ball in den Korb' }
+  ];
+  var BILDER = ['🦊', '🐼', '🦁', '🐸', '🐵', '🦄', '🐯', '🐶', '🐱', '🐰', '🐻', '🐧', '🦖', '🐙', '🚀', '⚽', '🌈', '⭐'];
+
+  var weiter = new URLSearchParams(location.search).get('weiter');
+  if (weiter && !SPIELE.some(function (s) { return s.datei === weiter; })) weiter = null;
+  if (weiter) $('extra').classList.add('hidden');
+
+  function zeige(id) {
+    ['vLaden', 'vWer', 'vName', 'vPin', 'vSpiele'].forEach(function (v) { $(v).classList.toggle('hidden', v !== id); });
+    window.scrollTo(0, 0);
+  }
+  function laden(text) { $('ladeText').textContent = text || 'Einen Moment …'; zeige('vLaden'); }
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  if (!SW.verbunden) $('nichtVerbunden').classList.remove('hidden');
+
+  /* ---------- Wer spielt? ---------- */
+  function wer() {
+    var z = SW.zuletzt(), h = '';
+    z.forEach(function (k, i) {
+      h += '<button class="kid" data-i="' + i + '"><span class="x" data-weg="' + i + '" title="Von diesem Gerät entfernen">✕</span>' +
+        '<span class="ava">' + esc(k.bild || '🙂') + '</span><b>' + esc(k.name) + '</b></button>';
+    });
+    h += '<button class="kid neu" id="kNeu"><span class="ava">➕</span><b>Neu</b></button>';
+    h += '<button class="kid neu" id="kAnders"><span class="ava">🔑</span><b>Anmelden</b></button>';
+    $('kids').innerHTML = h;
+    $('kids').onclick = function (e) {
+      var weg = e.target.closest('[data-weg]');
+      if (weg) { e.stopPropagation(); SW.vergessen(z[+weg.dataset.weg].name); wer(); return; }
+      var k = e.target.closest('.kid'); if (!k) return;
+      if (k.id === 'kNeu') return nameFenster(true);
+      if (k.id === 'kAnders') return nameFenster(false);
+      var p = z[+k.dataset.i]; pinFenster({ name: p.name, bild: p.bild, neu: false });
+    };
+    $('werHilfe').textContent = z.length
+      ? 'Tippe auf deinen Namen. Neu hier? Dann tippe auf „Neu“.'
+      : 'Neu hier? Tippe auf „Neu“. Du hast schon einen Namen? Dann auf „Anmelden“.';
+    zeige('vWer');
+  }
+
+  /* ---------- Name ---------- */
+  var gewaehlt = BILDER[0], neuModus = true;
+  function nameFenster(neu) {
+    neuModus = neu;
+    $('nameTitel').textContent = neu ? 'Neuer Spieler' : 'Anmelden';
+    $('avaBox').classList.toggle('hidden', !neu);
+    $('name').value = ''; $('nameMsg').textContent = '';
+    $('avas').innerHTML = BILDER.map(function (b) { return '<button type="button" class="' + (b === gewaehlt ? 'an' : '') + '">' + b + '</button>'; }).join('');
+    zeige('vName'); setTimeout(function () { $('name').focus(); }, 50);
+  }
+  $('avas').onclick = function (e) {
+    var b = e.target.closest('button'); if (!b) return;
+    gewaehlt = b.textContent;
+    [].forEach.call($('avas').children, function (x) { x.classList.toggle('an', x === b); });
+  };
+  $('nameZurueck').onclick = wer;
+  function nameOk() {
+    var n = $('name').value.trim().replace(/\s+/g, ' ');
+    if (!n) { $('nameMsg').textContent = 'Bitte gib deinen Namen ein.'; return; }
+    if (!/^[\p{L}\d ._-]{1,20}$/u.test(n)) { $('nameMsg').textContent = 'Bitte nur Buchstaben und Zahlen verwenden.'; return; }
+    pinFenster({ name: n, bild: neuModus ? gewaehlt : '🙂', neu: neuModus });
+  }
+  $('nameWeiter').onclick = nameOk;
+  $('name').addEventListener('keydown', function (e) { if (e.key === 'Enter') nameOk(); });
+
+  /* ---------- PIN ---------- */
+  var pinZiel = null, pin = '', ersterPin = null, sperre = false;
+  (function () {
+    var h = '';
+    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'].forEach(function (z) {
+      h += '<button type="button" class="' + (z === '' ? 'leer' : '') + '" data-z="' + z + '">' + z + '</button>';
+    });
+    $('pad').innerHTML = h;
+  })();
+  function punkte() { [].forEach.call($('dots').children, function (d, i) { d.classList.toggle('voll', i < pin.length); }); }
+  function pinMsg(t, bad) { $('pinMsg').textContent = t || ''; $('pinMsg').className = 'meldung' + (bad ? ' bad' : ''); }
+  function wackeln() { var d = $('dots'); d.classList.remove('wackel'); void d.offsetWidth; d.classList.add('wackel'); }
+  function pinFenster(ziel) {
+    pinZiel = ziel; pin = ''; ersterPin = null; sperre = false; punkte(); pinMsg('');
+    $('pinAva').textContent = ziel.bild || '🙂';
+    $('pinName').textContent = ziel.name;
+    $('pinFrage').textContent = ziel.neu ? 'Denk dir eine Geheimzahl aus (4 Ziffern)' : 'Gib deine Geheimzahl ein';
+    $('pinHilfe').classList.toggle('hidden', !!ziel.neu);
+    zeige('vPin');
+  }
+  function taste(z) {
+    if (sperre) return;
+    if (z === '⌫') { pin = pin.slice(0, -1); punkte(); return; }
+    if (!/^\d$/.test(z) || pin.length >= 4) return;
+    pin += z; punkte(); pinMsg('');
+    if (pin.length < 4) return;
+    if (pinZiel.neu && ersterPin === null) {
+      ersterPin = pin; pin = '';
+      setTimeout(function () { punkte(); $('pinFrage').textContent = 'Gib die Geheimzahl noch einmal ein'; }, 200);
+      return;
+    }
+    if (pinZiel.neu && pin !== ersterPin) {
+      wackeln(); pinMsg('Die Zahlen waren nicht gleich. Nochmal!', true);
+      ersterPin = null; pin = ''; setTimeout(punkte, 300);
+      $('pinFrage').textContent = 'Denk dir eine Geheimzahl aus (4 Ziffern)';
+      return;
+    }
+    einloggen();
+  }
+  $('pad').onclick = function (e) { var b = e.target.closest('button'); if (b) taste(b.dataset.z); };
+  document.addEventListener('keydown', function (e) {
+    if ($('vPin').classList.contains('hidden')) return;
+    if (/^\d$/.test(e.key)) taste(e.key); else if (e.key === 'Backspace') taste('⌫');
+  });
+  $('pinZurueck').onclick = function () { pinZiel && pinZiel.neu ? nameFenster(true) : wer(); };
+
+  var FEHLER = {
+    falsch: 'Die Geheimzahl stimmt nicht. Versuch es nochmal!',
+    unbekannt: 'Diesen Namen gibt es noch nicht. Tippe auf „Zurück“ und dann auf „Neu“.',
+    vergeben: 'Diesen Namen gibt es schon. Wähle einen anderen Namen.',
+    name: 'Der Name passt nicht. Bitte nur Buchstaben und Zahlen.',
+    server: 'Der Speicher hat gerade ein Problem. Versuch es gleich nochmal.'
+  };
+  function einloggen() {
+    sperre = true; pinMsg('Einen Moment …');
+    if (!SW.verbunden) { pinMsg('Die Spielwelt ist noch nicht verbunden.', true); sperre = false; pin = ''; punkte(); return; }
+    SW.anmelden(pinZiel.name, pin, pinZiel.neu, pinZiel.bild).then(function () {
+      if (weiter) { laden('Los geht’s …'); location.replace(weiter); return; }
+      spiele();
+    }).catch(function (e) {
+      sperre = false; pin = ''; wackeln(); setTimeout(punkte, 300);
+      pinMsg(FEHLER[e.code] || 'Keine Verbindung. Ist das Internet an?', true);
+      if (e.code === 'vergeben') setTimeout(function () { nameFenster(true); $('nameMsg').textContent = FEHLER.vergeben; $('name').value = pinZiel.name; }, 1300);
+    });
+  }
+
+  /* ---------- Spiele-Übersicht ---------- */
+  function spiele(offline) {
+    var s = SW.spieler() || { name: 'Spieler', bild: '🎮' };
+    $('hAva').textContent = s.bild || '🙂';
+    $('hName').textContent = s.name;
+    $('offlineHinweis').classList.toggle('hidden', !offline);
+    var h = '', gruppe = '';
+    SPIELE.forEach(function (g) {
+      if (g.gruppe !== gruppe) { gruppe = g.gruppe; h += '<div class="abschnitt">' + esc(gruppe) + '</div><div class="spiele">'; }
+      h += '<a class="spiel" href="' + esc(g.datei) + '"><span class="ico" style="background:' + g.farbe + '">' + g.ico + '</span>' +
+        '<div><b>' + esc(g.titel) + '</b><span>' + esc(g.text) + '</span></div></a>';
+      var naechste = SPIELE[SPIELE.indexOf(g) + 1];
+      if (!naechste || naechste.gruppe !== gruppe) h += '</div>';
+    });
+    $('liste').innerHTML = h;
+    zeige('vSpiele');
+    wolke(SW.offeneAnzahl() ? 'wartet' : 'ok');
+  }
+  var WOLKE = { ok: 'Gespeichert', wartet: 'Wird gespeichert …', speichert: 'Wird gespeichert …', offline: 'Nicht gespeichert' };
+  function wolke(s) { $('wolke').setAttribute('data-s', s); $('wolkeText').textContent = WOLKE[s] || ''; }
+  window.addEventListener('spielwelt-status', function (e) { wolke(e.detail); });
+
+  $('wechseln').onclick = function () {
+    laden('Speichern …');
+    SW.abmelden(false).then(function (ok) {
+      if (ok) return wer();
+      if (confirm('Dein letzter Fortschritt konnte noch nicht gespeichert werden (kein Internet?).\n\nTrotzdem abmelden? Dann geht er verloren.')) {
+        return SW.abmelden(true).then(wer);
+      }
+      spiele(true);
+    });
+  };
+
+  /* ---------- Besucherzähler, Gästebuch, Nachricht ---------- */
+  var WEBAPP = 'https://script.google.com/macros/s/AKfycbxuAImhCrHj1O37Blx9YQvvoIEagahcMOn_XQK1oycI8UoU8IQQtg8mqbHxRNpq0qKLBg/exec';
+  $('zaehler').src = WEBAPP + '?mode=zaehler';
+  var TITEL = { gaestebuch: '📖 Gästebuch', nachricht: '✉️ Nachricht schreiben' };
+  $('extra').onclick = function (e) {
+    var b = e.target.closest('[data-fenster]'); if (!b) return;
+    var m = b.getAttribute('data-fenster');
+    $('fensterTitel').textContent = TITEL[m];
+    $('fensterRahmen').src = WEBAPP + '?mode=' + m;
+    $('fenster').classList.remove('hidden');
+  };
+  function zu() { $('fenster').classList.add('hidden'); $('fensterRahmen').src = 'about:blank'; }
+  $('fensterZu').onclick = zu;
+  $('fenster').onclick = function (e) { if (e.target === this) zu(); };
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') zu(); });
+
+  /* ---------- Start ---------- */
+  var s = SW.spieler();
+  if (!SW.verbunden) {
+    // Ohne Verbindung: nur lokal spielen
+    if (weiter) { location.replace(weiter); return; }
+    $('wechseln').classList.add('hidden'); $('wolke').classList.add('hidden');
+    spiele(false);
+  } else if (!s) {
+    wer();
+  } else {
+    laden('Dein Spielstand wird geladen …');
+    SW.aktualisieren().then(function () {
+      if (weiter) { location.replace(weiter); return; }
+      spiele();
+    }).catch(function (e) {
+      if (e.code === 'falsch' || e.code === 'unbekannt') {
+        // PIN wurde geändert oder Spieler gelöscht → neu anmelden
+        SW.abmelden(true).then(function () {
+          pinFenster({ name: s.name, bild: s.bild, neu: false });
+          pinMsg(e.code === 'falsch' ? 'Deine Geheimzahl wurde geändert. Bitte neu eingeben.' : FEHLER.unbekannt, true);
+        });
+        return;
+      }
+      // Kein Internet: mit dem Stand auf diesem Gerät weiterspielen
+      SW.offlineWeiter();
+      if (weiter) { location.replace(weiter); return; }
+      spiele(true);
+    });
+  }
+})();
+</script>
+</body>
+</html>

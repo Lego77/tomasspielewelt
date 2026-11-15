@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<script src="sync.js" data-home="ul"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Flick Shot – Basketball</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;overflow:hidden;background:#1b1f3a;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;color:#fff;
+    -webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+  #wrap{position:fixed;inset:0;display:flex;justify-content:center;align-items:center}
+  canvas{display:block;touch-action:none;max-width:560px;width:100%;height:100%}
+  #hud{position:absolute;top:0;left:50%;transform:translateX(-50%);width:100%;max-width:560px;display:flex;justify-content:space-between;
+    padding:12px 14px;pointer-events:none;font-weight:700}
+  .pill{background:rgba(0,0,0,.35);border-radius:14px;padding:6px 12px;font-size:15px;line-height:1.15;text-align:center;min-width:76px}
+  .pill b{display:block;font-size:24px}
+  #fire{color:#ffb547}
+  #msg{position:absolute;top:30%;left:50%;transform:translate(-50%,-50%) scale(1);font-size:40px;font-weight:900;pointer-events:none;
+    text-shadow:0 3px 0 rgba(0,0,0,.35);opacity:0;transition:opacity .25s, transform .25s;white-space:nowrap}
+  #msg.show{opacity:1;transform:translate(-50%,-50%) scale(1.12)}
+  .overlay{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(15,18,40,.72);backdrop-filter:blur(3px)}
+  .card{background:#fff;color:#1b1f3a;border-radius:24px;padding:26px 24px;width:min(88vw,380px);text-align:center;box-shadow:0 20px 50px rgba(0,0,0,.4)}
+  .card h1{font-size:34px;margin-bottom:4px}
+  .card h1 span{color:#f26b1d}
+  .card p{font-size:15.5px;line-height:1.45;color:#444;margin:10px 0}
+  .card .big{font-size:52px;font-weight:900;color:#f26b1d;margin:4px 0}
+  .btn{display:block;width:100%;border:0;border-radius:16px;padding:15px;font-size:19px;font-weight:800;margin-top:10px;cursor:pointer;
+    background:#f26b1d;color:#fff;box-shadow:0 5px 0 #b44a0c}
+  .btn:active{transform:translateY(3px);box-shadow:0 2px 0 #b44a0c}
+  .btn.alt{background:#3b4bd8;box-shadow:0 5px 0 #2433a3}
+  .hidden{display:none}
+  .howto{display:flex;gap:10px;justify-content:center;margin:12px 0 6px;font-size:13.5px;color:#555}
+  .howto div{flex:1;background:#f3f4fa;border-radius:12px;padding:9px 6px}
+  .howto i{font-style:normal;font-size:24px;display:block}
+</style>
+<style>#wrap{bottom:var(--cut,0px)}</style>
+<style>/* Nicht die Google-Site mitscrollen */html,body{touch-action:none;overscroll-behavior:none}</style>
+<style>#wrap{top:var(--cutT,0px)}</style>
+<script>
+/* Ausgleich für Einbettung (z. B. Google Sites am Handy): nur den wirklich sichtbaren Bereich nutzen */
+(function(){
+  if (window.self === window.top || !('IntersectionObserver' in window)) return;
+  var root = document.documentElement, cb = -1, ct = -1, base = 0, lastH = -1;
+  function apply(b, t){
+    if (b === cb && t === ct) return; cb = b; ct = t;
+    root.style.setProperty('--cut', b + 'px'); root.style.setProperty('--cutT', t + 'px');
+    window.__cut = b; window.__cutT = t;
+    window.dispatchEvent(new Event('resize'));
+  }
+  // Spiele mit verschobener Zeichenfläche: Fingerposition passend umrechnen
+  ['pointerdown','pointermove','pointerup','pointercancel','wheel','click','contextmenu'].forEach(function(n){
+    window.addEventListener(n, function(e){
+      if (window.__shiftCanvasY && window.__cutT && e.target && e.target.tagName === 'CANVAS') {
+        try { Object.defineProperty(e, 'clientY', { value: e.clientY - window.__cutT, configurable: true }); } catch (x) {}
+      }
+    }, { capture: true, passive: true });
+  });
+  function start(){
+    var p = document.createElement('div');
+    p.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:100%;opacity:0;pointer-events:none;z-index:-1';
+    document.body.appendChild(p);
+    var th = []; for (var i = 0; i <= 100; i++) th.push(i / 100);
+    new IntersectionObserver(function(es){
+      var e = es[es.length - 1], r = e.intersectionRect, h = e.boundingClientRect.height;
+      if (r.height <= 0 || h <= 0) return;
+      var max = Math.round(h * 0.6);
+      var b = Math.min(max, Math.max(0, Math.round(h - r.bottom)));
+      var t = Math.min(max, Math.max(0, Math.round(r.top)));
+      // Seite unter einer festen Kopfzeile verschoben? (höchstens 100 px)
+      if (Math.abs(h - lastH) > 2) { lastH = h; base = b; } else if (t === 0 && b > base) base = b;
+      var hidden = Math.min(100, Math.max(0, base - b));
+      apply(b, Math.max(t, hidden > 8 ? hidden : 0));
+    }, { threshold: th }).observe(p);
+  }
+  root.style.setProperty('--cut', '0px'); root.style.setProperty('--cutT', '0px');
+  window.__cut = 0; window.__cutT = 0;
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+</head>
+<body>
+<div id="wrap">
+  <canvas id="c"></canvas>
+  <div id="hud">
+    <div class="pill">Punkte<b id="score">0</b></div>
+    <div class="pill" id="midpill">Serie<b id="streak">0</b></div>
+    <div class="pill" id="timepill">Zeit<b id="time">60</b></div>
+  </div>
+  <div id="msg"></div>
+
+  <div class="overlay" id="start">
+    <div class="card">
+      <h1>Flick <span>Shot</span> 🏀</h1>
+      <p>Wische den Ball mit einem schnellen Schwung nach oben in den Korb!</p>
+      <div class="howto">
+        <div><i>👆</i>Ball antippen &amp; nach oben wischen</div>
+        <div><i>↔️</i>Schräg wischen zum Zielen</div>
+        <div><i>🔥</i>3 Treffer in Folge = doppelte Punkte</div>
+      </div>
+      <button class="btn" id="btnTime">⏱️ 60 Sekunden</button>
+      <button class="btn alt" id="btnLives">❤️ 3 Leben</button>
+      <p id="hsline" style="font-size:13.5px;margin-bottom:0"></p>
+    </div>
+  </div>
+
+  <div class="overlay hidden" id="over">
+    <div class="card">
+      <h1 id="overTitle">Zeit um!</h1>
+      <div class="big" id="final">0</div>
+      <p id="overText"></p>
+      <button class="btn" id="btnAgain">Nochmal spielen</button>
+      <button class="btn alt" id="btnMenu">Menü</button>
+    </div>
+  </div>
+</div>
+
+<script>
+(() => {
+'use strict';
+const cv = document.getElementById('c');
+const ctx = cv.getContext('2d');
+const $ = id => document.getElementById(id);
+
+// ---------- Welt (Meter) ----------
+const G = 9.8, BALL_R = 0.12, RIM_R = 0.27, RIM_Y = 3.05, TUBE = 0.012;
+const CAM = { y: 1.45, z: -0.7 };
+const START = { x: 0, y: 0.55, z: 0.6 };
+
+let W = 0, H = 0, DPR = 1, F = 0, HORIZON = 0;
+function resize() {
+  DPR = Math.min(window.devicePixelRatio || 1, 2);
+  const r = cv.getBoundingClientRect();
+  W = r.width; H = r.height;
+  cv.width = W * DPR; cv.height = H * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+  F = Math.min(W * 1.25, H * 0.78);
+  HORIZON = H * 0.40;
+}
+window.addEventListener('resize', resize);
+
+function proj(x, y, z) {
+  const zz = Math.max(0.05, z - CAM.z);
+  const s = F / zz;
+  return { x: W / 2 + x * s, y: HORIZON - (y - CAM.y) * s, s };
+}
+
+// ---------- Zustand ----------
+const S = {
+  mode: 'time', running: false, score: 0, streak: 0, best: 0, lives: 3, timeLeft: 60,
+  hoop: { x: 0, z: 5.2, baseX: 0, moveAmp: 0, moveSpeed: 0, phase: 0 },
+  ball: null, shots: 0, hits: 0
+};
+let hs = { time: 0, lives: 0 };
+try { hs = JSON.parse(localStorage.getItem('flickshot_hs')) || hs; } catch (e) {}
+function saveHs() { try { localStorage.setItem('flickshot_hs', JSON.stringify(hs)); } catch (e) {} }
+function hsLine() {
+  $('hsline').textContent = (hs.time || hs.lives) ? `Rekord: ⏱️ ${hs.time} Punkte · ❤️ ${hs.lives} Punkte` : '';
+}
+hsLine();
+
+function newBall() {
+  S.ball = { x: START.x, y: START.y, z: START.z, vx: 0, vy: 0, vz: 0, flying: false, done: false,
+             rimHit: false, scored: false, t: 0, spin: 0, rot: 0, bounces: 0 };
+}
+newBall();
+
+// Schwierigkeit je nach Punkten
+function setLevel() {
+  const p = S.score, h = S.hoop;
+  h.z = 4.0 + Math.min(p, 30) * 0.05;          // Korb rückt nach hinten
+  h.moveAmp = p < 8 ? 0 : Math.min(0.25 + (p - 8) * 0.04, 1.1);   // Korb bewegt sich
+  h.moveSpeed = p < 8 ? 0 : Math.min(0.8 + (p - 8) * 0.05, 2.0);
+}
+
+// ---------- Ton ----------
+let actx = null;
+function beep(freq, dur, type = 'sine', vol = 0.15, slide = 0) {
+  if (!actx) return;
+  try {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.value = freq;
+    if (slide) o.frequency.linearRampToValueAtTime(freq + slide, actx.currentTime + dur);
+    g.gain.setValueAtTime(vol, actx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, actx.currentTime + dur);
+    o.connect(g).connect(actx.destination); o.start(); o.stop(actx.currentTime + dur);
+  } catch (e) {}
+}
+function unlockAudio() {
+  try { if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)(); actx.resume && actx.resume(); } catch (e) {}
+}
+
+// ---------- Eingabe ----------
+let drag = null;
+cv.addEventListener('pointerdown', e => {
+  if (!S.running || S.ball.flying) return;
+  const r = cv.getBoundingClientRect();
+  const px = e.clientX - r.left, py = e.clientY - r.top;
+  if (py < H * 0.45) return;   // nur in der unteren Hälfte starten
+  drag = { x0: px, y0: py, t0: performance.now(), pts: [{ x: px, y: py, t: performance.now() }] };
+  cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const r = cv.getBoundingClientRect();
+  drag.pts.push({ x: e.clientX - r.left, y: e.clientY - r.top, t: performance.now() });
+  if (drag.pts.length > 30) drag.pts.shift();
+});
+function release(e) {
+  if (!drag) return;
+  const r = cv.getBoundingClientRect();
+  const px = e.clientX - r.left, py = e.clientY - r.top;
+  const dy = drag.y0 - py, dx = px - drag.x0;
+  const dt = Math.max(60, performance.now() - drag.t0);
+  drag = null;
+  if (dy < H * 0.06) return;                    // zu kurz → kein Wurf
+  // Stärke: Wischlänge (Hauptfaktor) + etwas Tempo
+  const len = dy / H;                            // 0..~0.6
+  const speed = Math.min(dy / dt, 4);            // px/ms
+  let p = (len / 0.315) * 0.88 + Math.min(speed / 1.6, 1.4) * 0.12;
+  p = Math.max(0.45, Math.min(p, 1.7));
+  const b = S.ball;
+  const dist = hoopCenter().z - START.z;
+  // Ideale Flugzeit ~1s bei p=1 für den aktuellen Abstand
+  const T = 1.3;                                // Flugzeit → hoher Bogen
+  b.vz = dist / T * p;
+  b.vy = (RIM_Y - START.y + 0.5 * G * T * T) / T * Math.sqrt(p);
+  // Zielen: seitliche Wischrichtung relativ zur Höhe
+  b.vx = (dx / dy) * dist / T * p * 0.75;
+  b.flying = true; b.t = 0; b.spin = -6 - p * 4;
+  S.shots++;
+  beep(260, 0.12, 'triangle', 0.12, 140);
+}
+cv.addEventListener('pointerup', release);
+cv.addEventListener('pointercancel', () => drag = null);
+
+// ---------- Physik ----------
+function hoopCenter() { return { x: S.hoop.x, y: RIM_Y, z: S.hoop.z + RIM_R + 0.15 }; }
+const BOARD = { w: 1.8, h: 1.05, y0: 2.9 };
+
+function step(dt) {
+  const b = S.ball;
+  if (!b.flying) return;
+  const sub = 6, h = dt / sub;
+  for (let i = 0; i < sub; i++) {
+    const py = b.y;
+    b.vy -= G * h;
+    b.x += b.vx * h; b.y += b.vy * h; b.z += b.vz * h;
+    b.rot += b.spin * h;
+    const c = hoopCenter();
+
+    // Brett
+    const bz = c.z + RIM_R + 0.15;
+    if (b.vz > 0 && b.z + BALL_R > bz && b.z < bz + 0.2 &&
+        Math.abs(b.x - c.x) < BOARD.w / 2 + BALL_R * 0.5 && b.y > BOARD.y0 - BALL_R && b.y < BOARD.y0 + BOARD.h) {
+      b.z = bz - BALL_R; b.vz = -b.vz * 0.55; b.vx *= 0.8; b.vy *= 0.9;
+      beep(140, 0.08, 'square', 0.06);
+    }
+
+    // Ring (Torus)
+    const ddx = b.x - c.x, ddz = b.z - c.z;
+    const d = Math.hypot(ddx, ddz) || 1e-6;
+    const rx = c.x + RIM_R * ddx / d, rz = c.z + RIM_R * ddz / d;
+    const nx = b.x - rx, ny = b.y - RIM_Y, nz = b.z - rz;
+    const nd = Math.hypot(nx, ny, nz);
+    if (nd < BALL_R + TUBE) {
+      const ux = nx / nd, uy = ny / nd, uz = nz / nd;
+      const vn = b.vx * ux + b.vy * uy + b.vz * uz;
+      if (vn < 0) {
+        const e = 0.55;
+        b.vx -= (1 + e) * vn * ux; b.vy -= (1 + e) * vn * uy; b.vz -= (1 + e) * vn * uz;
+        b.vx *= 0.92; b.vz *= 0.92;
+        if (!b.rimHit) beep(520, 0.07, 'square', 0.05);
+        b.rimHit = true;
+      }
+      const push = BALL_R + TUBE - nd;
+      b.x += ux * push; b.y += uy * push; b.z += uz * push;
+    }
+
+    // Treffer: Ball geht von oben durch die Ringebene
+    if (!b.scored && py > RIM_Y && b.y <= RIM_Y && b.vy < 0) {
+      if (Math.hypot(b.x - c.x, b.z - c.z) < RIM_R - BALL_R * 0.25) {
+        b.scored = true; onScore(!b.rimHit);
+        b.vx *= 0.3; b.vz *= 0.3;   // Netz bremst
+      }
+    }
+
+    // Boden
+    if (b.y < BALL_R) {
+      b.y = BALL_R;
+      if (b.vy < 0) { b.vy = -b.vy * 0.55; b.vx *= 0.8; b.vz *= 0.8; b.bounces++; if (Math.abs(b.vy) > 1) beep(90, 0.06, 'sine', 0.12); }
+    }
+  }
+  b.t += dt;
+  if (!b.done && (b.t > 3.2 || b.bounces >= 3 || b.z < -1 || b.z > 12)) {
+    b.done = true;
+    if (!b.scored) onMiss();
+    setTimeout(() => { if (S.running) newBall(); }, 250);
+  }
+}
+
+// ---------- Punkte ----------
+function flash(text, color) {
+  const m = $('msg'); m.textContent = text; m.style.color = color;
+  m.classList.add('show'); clearTimeout(flash.t);
+  flash.t = setTimeout(() => m.classList.remove('show'), 750);
+}
+const particles = [];
+function burst() {
+  const c = hoopCenter(), p = proj(c.x, c.y, c.z);
+  for (let i = 0; i < 28; i++) {
+    const a = Math.random() * Math.PI * 2, v = 80 + Math.random() * 200;
+    particles.push({ x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 120, life: 1,
+      col: ['#ffb547', '#f26b1d', '#ffe66d', '#7ee2ff', '#ff7ab6'][i % 5] });
+  }
+}
+function onScore(swish) {
+  S.streak++; S.hits++;
+  let pts = swish ? 3 : 2;
+  const onFire = S.streak >= 3;
+  if (onFire) pts *= 2;
+  S.score += pts;
+  if (S.mode === 'time') S.timeLeft = Math.min(S.timeLeft + (swish ? 2 : 1), 99);
+  flash((swish ? 'Swish! ' : 'Treffer! ') + '+' + pts + (onFire ? ' 🔥' : ''), swish ? '#7ee2ff' : '#ffe66d');
+  burst();
+  beep(660, 0.1, 'triangle', 0.14); setTimeout(() => beep(880, 0.15, 'triangle', 0.14), 90);
+  setLevel(); hud();
+}
+function onMiss() {
+  S.streak = 0;
+  if (S.mode === 'lives') {
+    S.lives--;
+    flash(S.lives > 0 ? 'Daneben! ❤️ ' + S.lives : 'Daneben!', '#ff8b8b');
+    if (S.lives <= 0) setTimeout(gameOver, 500);
+  } else flash('Daneben!', '#ff8b8b');
+  beep(200, 0.25, 'sawtooth', 0.06, -80);
+  hud();
+}
+function hud() {
+  $('score').textContent = S.score;
+  $('streak').textContent = S.streak;
+  $('streak').parentElement.style.color = S.streak >= 3 ? '#ffb547' : '#fff';
+  if (S.mode === 'time') { $('timepill').firstChild.nodeValue = 'Zeit'; $('time').textContent = Math.ceil(S.timeLeft); }
+  else { $('timepill').firstChild.nodeValue = 'Leben'; $('time').textContent = '❤️'.repeat(Math.max(S.lives, 0)) || '–'; }
+}
+
+// ---------- Ablauf ----------
+function startGame(mode) {
+  unlockAudio();
+  S.mode = mode; S.running = true; S.score = 0; S.streak = 0; S.lives = 3; S.timeLeft = 60;
+  S.shots = 0; S.hits = 0; S.hoop.phase = 0; S.hoop.x = 0;
+  setLevel(); newBall(); hud();
+  $('start').classList.add('hidden'); $('over').classList.add('hidden');
+}
+function gameOver() {
+  if (!S.running) return;
+  S.running = false;
+  const rec = S.score > (hs[S.mode] || 0);
+  if (rec) { hs[S.mode] = S.score; saveHs(); }
+  $('overTitle').textContent = S.mode === 'time' ? 'Zeit um! ⏱️' : 'Keine Leben mehr!';
+  $('final').textContent = S.score + ' Punkte';
+  const q = S.shots ? Math.round(S.hits / S.shots * 100) : 0;
+  $('overText').innerHTML = `${S.hits} Treffer bei ${S.shots} Würfen (${q} %)<br>` +
+    (rec ? '🏆 <b>Neuer Rekord!</b>' : `Rekord: ${hs[S.mode]} Punkte`);
+  $('over').classList.remove('hidden');
+  beep(rec ? 990 : 330, 0.4, 'triangle', 0.12);
+}
+$('btnTime').onclick = () => startGame('time');
+$('btnLives').onclick = () => startGame('lives');
+$('btnAgain').onclick = () => startGame(S.mode);
+$('btnMenu').onclick = () => { $('over').classList.add('hidden'); hsLine(); $('start').classList.remove('hidden'); };
+
+// ---------- Zeichnen ----------
+function drawScene() {
+  // Hallenwand
+  const g = ctx.createLinearGradient(0, 0, 0, HORIZON);
+  g.addColorStop(0, '#2a2f5c'); g.addColorStop(1, '#3d4380');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, HORIZON + 1);
+  // Lichter
+  for (let i = 0; i < 5; i++) {
+    const x = W * (0.1 + i * 0.2);
+    const lg = ctx.createRadialGradient(x, 0, 0, x, 0, W * 0.18);
+    lg.addColorStop(0, 'rgba(255,255,230,.35)'); lg.addColorStop(1, 'rgba(255,255,230,0)');
+    ctx.fillStyle = lg; ctx.fillRect(x - W * 0.2, 0, W * 0.4, W * 0.2);
+  }
+  // Parkett
+  const fg = ctx.createLinearGradient(0, HORIZON, 0, H);
+  fg.addColorStop(0, '#b8783e'); fg.addColorStop(1, '#e2a565');
+  ctx.fillStyle = fg; ctx.fillRect(0, HORIZON, W, H - HORIZON);
+  ctx.strokeStyle = 'rgba(120,70,30,.25)'; ctx.lineWidth = 1;
+  for (let x = -6; x <= 6; x += 0.5) {
+    const a = proj(x, 0, 0), b = proj(x, 0, 14);
+    ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+  }
+  // Freiwurflinie + Zone
+  const c = hoopCenter(), lz = c.z - 4.2;
+  ctx.strokeStyle = 'rgba(255,255,255,.8)'; ctx.lineWidth = 3;
+  const l1 = proj(-1.8, 0, Math.max(lz, 0.2)), l2 = proj(1.8, 0, Math.max(lz, 0.2));
+  const k1 = proj(-1.8, 0, c.z + 1.2), k2 = proj(1.8, 0, c.z + 1.2);
+  ctx.beginPath(); ctx.moveTo(l1.x, l1.y); ctx.lineTo(l2.x, l2.y); ctx.lineTo(k2.x, k2.y); ctx.lineTo(k1.x, k1.y); ctx.closePath();
+  ctx.fillStyle = 'rgba(242,107,29,.25)'; ctx.fill(); ctx.stroke();
+}
+
+function drawBoardAndPole() {
+  const c = hoopCenter(), bz = c.z + RIM_R + 0.15;
+  // Stange
+  const p0 = proj(c.x, 0, bz + 0.6), p1 = proj(c.x, BOARD.y0 + 0.3, bz + 0.6);
+  ctx.strokeStyle = '#5c6070'; ctx.lineWidth = Math.max(4, 0.12 * p0.s);
+  ctx.beginPath(); ctx.moveTo(p0.x, p0.y); ctx.lineTo(p1.x, p1.y); ctx.stroke();
+  // Brett
+  const tl = proj(c.x - BOARD.w / 2, BOARD.y0 + BOARD.h, bz), br = proj(c.x + BOARD.w / 2, BOARD.y0, bz);
+  ctx.fillStyle = 'rgba(255,255,255,.92)'; ctx.strokeStyle = '#1b1f3a'; ctx.lineWidth = 3;
+  roundRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y, 4); ctx.fill(); ctx.stroke();
+  const it = proj(c.x - 0.3, RIM_Y + 0.45, bz), ib = proj(c.x + 0.3, RIM_Y + 0.02, bz);
+  ctx.strokeStyle = '#f26b1d'; ctx.lineWidth = 3;
+  ctx.strokeRect(it.x, it.y, ib.x - it.x, ib.y - it.y);
+}
+function roundRect(x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function rimPts(from, to, y, r) {
+  const c = hoopCenter(), pts = [];
+  for (let i = 0; i <= 24; i++) {
+    const a = from + (to - from) * i / 24;
+    pts.push(proj(c.x + Math.cos(a) * r, y, c.z + Math.sin(a) * r));
+  }
+  return pts;
+}
+function strokePts(pts) { ctx.beginPath(); pts.forEach((p, i) => i ? ctx.lineTo(p.x, p.y) : ctx.moveTo(p.x, p.y)); ctx.stroke(); }
+function drawRimBack() {
+  ctx.strokeStyle = '#c94a0a'; ctx.lineWidth = 4; strokePts(rimPts(0, Math.PI, RIM_Y, RIM_R));
+}
+function drawRimFront() {
+  ctx.strokeStyle = '#f26b1d'; ctx.lineWidth = 5; strokePts(rimPts(Math.PI, Math.PI * 2, RIM_Y, RIM_R));
+}
+function drawNet(t) {
+  const c = hoopCenter();
+  const sway = S.ball && S.ball.scored && S.ball.t < 2 ? Math.sin(t * 20) * 0.02 : 0;
+  ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1.5;
+  const N = 12, depth = 0.42;
+  for (let i = 0; i < N; i++) {
+    const a = (i / N) * Math.PI * 2;
+    const top = proj(c.x + Math.cos(a) * RIM_R, RIM_Y, c.z + Math.sin(a) * RIM_R);
+    const a2 = a + 0.4;
+    const bot = proj(c.x + Math.cos(a2) * RIM_R * 0.6 + sway, RIM_Y - depth, c.z + Math.sin(a2) * RIM_R * 0.6);
+    ctx.beginPath(); ctx.moveTo(top.x, top.y); ctx.lineTo(bot.x, bot.y); ctx.stroke();
+    const a3 = a - 0.4;
+    const bot2 = proj(c.x + Math.cos(a3) * RIM_R * 0.6 + sway, RIM_Y - depth, c.z + Math.sin(a3) * RIM_R * 0.6);
+    ctx.beginPath(); ctx.moveTo(top.x, top.y); ctx.lineTo(bot2.x, bot2.y); ctx.stroke();
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,.6)';
+  strokePts(rimPts(0, Math.PI * 2, RIM_Y - depth * 0.5, RIM_R * 0.8));
+  strokePts(rimPts(0, Math.PI * 2, RIM_Y - depth, RIM_R * 0.6));
+}
+function drawBall() {
+  const b = S.ball;
+  // Schatten
+  const sh = proj(b.x, 0, b.z);
+  const sr = BALL_R * sh.s * Math.max(0.4, 1 - b.y / 6);
+  ctx.fillStyle = 'rgba(0,0,0,.25)';
+  ctx.beginPath(); ctx.ellipse(sh.x, sh.y, sr, sr * 0.35, 0, 0, Math.PI * 2); ctx.fill();
+  // Ball
+  const p = proj(b.x, b.y, b.z), r = BALL_R * p.s;
+  const gr = ctx.createRadialGradient(p.x - r * 0.35, p.y - r * 0.35, r * 0.1, p.x, p.y, r);
+  gr.addColorStop(0, '#ffa45c'); gr.addColorStop(1, '#d4520d');
+  ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(p.x, p.y, r, 0, Math.PI * 2); ctx.fill();
+  ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(b.rot);
+  ctx.strokeStyle = '#3a1a05'; ctx.lineWidth = Math.max(1, r * 0.07);
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke(); ctx.clip();
+  ctx.beginPath(); ctx.moveTo(-r, 0); ctx.lineTo(r, 0); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -r); ctx.lineTo(0, r); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(-r * 0.95, 0, r * 0.5, r * 0.85, 0, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(r * 0.95, 0, r * 0.5, r * 0.85, 0, Math.PI / 2, Math.PI * 1.5); ctx.stroke();
+  ctx.restore();
+  // Feuer-Effekt
+  if (S.streak >= 3 && b.flying) {
+    ctx.fillStyle = 'rgba(255,150,40,.25)';
+    ctx.beginPath(); ctx.arc(p.x, p.y, r * 1.5, 0, Math.PI * 2); ctx.fill();
+  }
+}
+function drawAimHint(t) {
+  const b = S.ball;
+  if (!S.running || b.flying) return;
+  const p = proj(b.x, b.y, b.z);
+  if (drag) {
+    const last = drag.pts[drag.pts.length - 1];
+    ctx.strokeStyle = 'rgba(255,255,255,.7)'; ctx.lineWidth = 4; ctx.setLineDash([8, 8]);
+    ctx.beginPath(); ctx.moveTo(drag.x0, drag.y0); ctx.lineTo(last.x, last.y); ctx.stroke(); ctx.setLineDash([]);
+  } else if (S.shots < 2) {
+    const k = (t * 0.9) % 1;
+    ctx.globalAlpha = 1 - k;
+    ctx.font = '34px system-ui'; ctx.textAlign = 'center';
+    ctx.fillText('👆', p.x, p.y + 40 - k * 120);
+    ctx.globalAlpha = 1;
+  }
+}
+function drawParticles(dt) {
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const q = particles[i];
+    q.vy += 400 * dt; q.x += q.vx * dt; q.y += q.vy * dt; q.life -= dt * 1.2;
+    if (q.life <= 0) { particles.splice(i, 1); continue; }
+    ctx.globalAlpha = q.life; ctx.fillStyle = q.col;
+    ctx.fillRect(q.x - 3, q.y - 3, 6, 6);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function render(t, dt) {
+  ctx.clearRect(0, 0, W, H);
+  drawScene();
+  drawBoardAndPole();
+  const b = S.ball, c = hoopCenter();
+  const behind = b.z > c.z;
+  const inside = Math.hypot(b.x - c.x, b.z - c.z) < RIM_R && b.y < RIM_Y + BALL_R && b.y > RIM_Y - 0.6;
+  if (behind && !inside) drawBall();
+  drawRimBack();
+  if (inside) drawBall();
+  drawNet(t);
+  drawRimFront();
+  if (!behind && !inside) drawBall();
+  drawAimHint(t);
+  drawParticles(dt);
+}
+
+// ---------- Loop ----------
+let last = performance.now();
+function loop(now) {
+  const dt = Math.min(0.033, (now - last) / 1000); last = now;
+  const t = now / 1000;
+  if (S.running) {
+    const h = S.hoop;
+    if (h.moveAmp) { h.phase += dt * h.moveSpeed; h.x = Math.sin(h.phase) * h.moveAmp; } else h.x *= 0.95;
+    if (S.mode === 'time') {
+      S.timeLeft -= dt;
+      $('time').textContent = Math.max(0, Math.ceil(S.timeLeft));
+      $('timepill').style.color = S.timeLeft < 10 ? '#ff8b8b' : '#fff';
+      if (S.timeLeft <= 0) gameOver();
+    }
+  }
+  step(dt);
+  render(t, dt);
+  requestAnimationFrame(loop);
+}
+resize(); hud();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

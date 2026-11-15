@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<script src="sync.js" data-home="ul"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Weltenbummler – Geo-Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E6EEEA; --sheet:#F7FAF8; --ink:#16231D; --muted:#55665D; --line:#C9D6CF;
+  --cover:#1D4A37; --cover-2:#163A2B; --gold:#D4A72C; --ok:#1F8A4C; --bad:#C2272D;
+  --btn:#FFFFFF; --btn-line:#B9C9C0;
+  --display:"Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
+  --body:"Atkinson Hyperlegible", "Segoe UI", system-ui, sans-serif;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#0F1A15; --sheet:#17241E; --ink:#E7F0EB; --muted:#9DB0A6; --line:#2A3B33;
+    --cover:#1F5A42; --cover-2:#173F2F; --btn:#1C2C25; --btn-line:#34483F;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0F1A15; --sheet:#17241E; --ink:#E7F0EB; --muted:#9DB0A6; --line:#2A3B33;
+  --cover:#1F5A42; --cover-2:#173F2F; --btn:#1C2C25; --btn-line:#34483F;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--body);font-size:17px;line-height:1.45;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.app{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+h1,h2,h3{font-family:var(--display);margin:0;line-height:1.1}
+.hidden{display:none!important}
+
+/* Reisepass-Kopf */
+.cover{background:var(--cover);color:#F3EBD2;border-radius:18px;padding:20px 20px 18px;position:relative;overflow:hidden}
+.cover::after{content:"";position:absolute;inset:8px;border:1.5px solid rgba(212,167,44,.45);border-radius:12px;pointer-events:none}
+.cover .top{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.cover .brand{font-family:var(--display);font-weight:800;font-size:15px;letter-spacing:.04em;color:var(--gold)}
+.cover .rank{font-family:var(--display);font-weight:800;font-size:30px;margin-top:6px}
+.globe{width:54px;height:54px;flex:none;opacity:.9}
+.miles{display:flex;align-items:baseline;gap:6px;margin-top:14px}
+.miles b{font-family:var(--display);font-size:24px}
+.bar{height:8px;background:rgba(0,0,0,.25);border-radius:4px;margin-top:8px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:4px;transition:width .6s ease}
+.next{font-size:14px;opacity:.8;margin-top:6px}
+.chips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.chip{background:var(--cover-2);border-radius:999px;padding:5px 12px;font-size:14px}
+
+.label{font-size:15px;color:var(--muted);margin:22px 2px 8px}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--sheet);border:1px solid var(--line);border-radius:12px;padding:4px;gap:4px}
+.seg button{border:0;background:none;padding:10px 4px;border-radius:9px;font-weight:700;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--cover);color:#F3EBD2}
+
+.cats{display:flex;flex-direction:column;background:var(--sheet);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.cat{display:flex;align-items:center;gap:14px;padding:14px 16px;border:0;background:none;text-align:left;border-top:1px solid var(--line)}
+.cat:first-child{border-top:0}
+.cat:hover{background:rgba(0,0,0,.03)}
+.cat .ic{font-size:28px;width:40px;text-align:center;flex:none}
+.cat .t{flex:1;min-width:0}
+.cat .n{font-weight:700;font-size:18px}
+.cat .d{font-size:14px;color:var(--muted)}
+.cat .slot{width:46px;height:46px;flex:none}
+
+.wide{display:block;width:100%;margin-top:14px;padding:14px;border-radius:14px;border:1.5px solid var(--btn-line);background:var(--btn);font-weight:700;font-size:17px}
+.primary{background:var(--cover);border-color:var(--cover);color:#F3EBD2}
+
+/* Quiz */
+.qtop{display:flex;align-items:center;gap:12px}
+.x{border:0;background:var(--sheet);border:1px solid var(--line);width:40px;height:40px;border-radius:50%;font-size:18px;flex:none}
+.dots{display:flex;gap:5px;flex:1}
+.dots span{flex:1;height:8px;border-radius:4px;background:var(--line)}
+.dots .ok{background:var(--ok)} .dots .no{background:var(--bad)} .dots .cur{background:var(--gold)}
+.tally{font-family:var(--display);font-weight:800;min-width:64px;text-align:right}
+.card{background:var(--sheet);border:1px solid var(--line);border-radius:18px;padding:26px 20px;margin-top:18px;text-align:center}
+.big{font-size:84px;line-height:1;margin-bottom:12px}
+.q{font-family:var(--display);font-weight:600;font-size:23px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:16px}
+.opt{min-height:64px;padding:12px 10px;border-radius:14px;border:1.5px solid var(--btn-line);background:var(--btn);font-weight:700;font-size:17px;transition:transform .12s}
+.opt:active{transform:scale(.97)}
+.opt.ok{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.no{background:var(--bad);border-color:var(--bad);color:#fff}
+.opt.gone{visibility:hidden}
+.opt:disabled{cursor:default}
+.tools{display:flex;justify-content:space-between;align-items:center;margin-top:14px;min-height:48px;gap:10px;flex-wrap:wrap}
+.tbtns{display:flex;gap:8px;flex-wrap:wrap}
+.hint{margin-top:16px;background:rgba(212,167,44,.16);border:1px solid rgba(212,167,44,.5);border-radius:12px;padding:10px 12px;font-size:17px;text-align:left}
+.opts.emo .opt{font-size:46px;line-height:1}
+.joker{border:1.5px dashed var(--gold);background:none;border-radius:999px;padding:9px 14px;font-weight:700}
+.joker:disabled{opacity:.4;cursor:default}
+.fb{font-weight:700}
+.fb.ok{color:var(--ok)} .fb.no{color:var(--bad)}
+.go{padding:12px 22px;border-radius:999px;border:0;background:var(--cover);color:#F3EBD2;font-weight:700}
+.streak{display:inline-block;margin-left:6px;color:var(--gold)}
+
+/* Ergebnis */
+.result{text-align:center;padding-top:10px}
+.score{font-family:var(--display);font-weight:800;font-size:56px;margin-top:6px}
+.earned{font-size:18px;color:var(--muted)}
+.stampbig{width:200px;height:200px;margin:20px auto 6px}
+.stampbig.slam svg{animation:slam .55s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes slam{0%{transform:scale(2.4) rotate(-25deg);opacity:0}60%{transform:scale(.92) rotate(-6deg);opacity:1}100%{transform:scale(1) rotate(-8deg)}}
+.msg{font-size:18px;margin:8px auto 0;max-width:34ch}
+.rankup{display:inline-block;margin-top:14px;background:var(--gold);color:#2A1F00;padding:8px 16px;border-radius:999px;font-weight:700}
+
+/* Pass */
+.pass{background:var(--sheet);border:1px solid var(--line);border-radius:16px;padding:16px;margin-top:16px}
+.prow{display:grid;grid-template-columns:1fr repeat(3,64px);align-items:center;gap:8px;padding:8px 0;border-top:1px solid var(--line)}
+.prow:first-child{border-top:0}
+.prow .pn{font-weight:700}
+.prow svg{width:64px;height:64px}
+.phead{display:grid;grid-template-columns:1fr repeat(3,64px);gap:8px;font-size:13px;color:var(--muted);text-align:center;margin-top:18px}
+.phead span:first-child{text-align:left}
+.note{font-size:14px;color:var(--muted);text-align:center;margin-top:16px}
+
+/* Modus-Umschalter */
+.modebar{display:flex;justify-content:flex-end;margin-bottom:12px}
+.modebtn{border:1.5px solid var(--btn-line);background:var(--btn);border-radius:999px;padding:8px 14px;font-weight:700;font-size:15px}
+
+/* Kindermodus */
+body.kid{--cover:#2563C9;--cover-2:#1C4FA6;--gold:#FFC83D;--paper:#EAF3FF;--sheet:#FFFFFF;--line:#C9DBF5;--btn-line:#A9C4EC}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]) body.kid{--paper:#0E1830;--sheet:#16233F;--line:#2A3D63;--btn:#1B2C4D;--btn-line:#34508A;--cover:#2E6BD6;--cover-2:#2457B3}
+}
+:root[data-theme="dark"] body.kid{--paper:#0E1830;--sheet:#16233F;--line:#2A3D63;--btn:#1B2C4D;--btn-line:#34508A;--cover:#2E6BD6;--cover-2:#2457B3}
+.kidcover{background:var(--cover);color:#fff;border-radius:24px;padding:22px 20px;text-align:center}
+.kidcover h1{font-size:30px;font-weight:800}
+.kidcover .hi{font-size:16px;opacity:.9;margin-top:4px}
+.kidstats{display:flex;justify-content:center;gap:12px;margin-top:16px;flex-wrap:wrap}
+.kidstats span{background:var(--cover-2);border-radius:999px;padding:8px 16px;font-family:var(--display);font-weight:800;font-size:20px}
+.ktiles{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px}
+.ktile{border:0;border-radius:22px;padding:20px 12px;color:#fff;text-align:center;box-shadow:0 4px 0 rgba(0,0,0,.18);transition:transform .1s}
+.ktile:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+.ktile:last-child:nth-child(odd){grid-column:span 2}
+.ktile .ki{font-size:52px;line-height:1}
+.ktile .kn{font-family:var(--display);font-weight:800;font-size:20px;margin-top:8px}
+.ktile .kd{font-size:14px;opacity:.92;margin-top:2px}
+body.kid .opts{grid-template-columns:1fr}
+body.kid .opt{min-height:68px;font-size:21px;border-radius:18px;border-width:2px}
+body.kid .q{font-size:25px}
+body.kid .big{font-size:96px}
+.big.pop{animation:pop .45s ease}
+@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.25) rotate(-6deg)}100%{transform:scale(1)}}
+.sticker{font-size:120px;line-height:1;margin:18px auto 4px;display:inline-block}
+.sticker.slam{animation:slam2 .6s cubic-bezier(.2,.9,.3,1.3) both}
+@keyframes slam2{0%{transform:scale(2.5) rotate(-25deg);opacity:0}60%{transform:scale(.9);opacity:1}100%{transform:scale(1) rotate(-4deg)}}
+.stname{font-family:var(--display);font-weight:800;font-size:22px}
+.album{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:16px}
+.album div{background:var(--sheet);border:2px solid var(--line);border-radius:18px;aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:40px}
+.album div small{font-size:11px;margin-top:2px;color:var(--muted);font-family:var(--body)}
+.album div.empty{border-style:dashed;color:var(--line);font-family:var(--display);font-weight:800;font-size:28px}
+
+/* Weltwahl */
+.wp-head{text-align:center;padding:28px 8px 6px}
+.wp-head .brand2{font-family:var(--display);font-weight:800;color:var(--muted);letter-spacing:.06em;font-size:14px;text-transform:uppercase}
+.wp-head h1{font-size:34px;font-weight:800;margin-top:6px}
+.worlds{display:grid;gap:14px;margin-top:22px}
+.world{border:0;border-radius:24px;padding:26px 20px;text-align:left;display:flex;align-items:center;gap:18px;color:#fff;box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.world:active{transform:translateY(3px);box-shadow:0 1px 0 rgba(0,0,0,.2)}
+.world .wi{font-size:64px;line-height:1;flex:none}
+.world .wn{display:block;font-family:var(--display);font-weight:800;font-size:28px}
+.world .wd{display:block;font-size:16px;opacity:.9;margin-top:2px}
+.world.erde{background:linear-gradient(135deg,#1D4A37,#2F7A55)}
+.world.all{background:linear-gradient(135deg,#1B1446,#4A2C8F);position:relative;overflow:hidden}
+.world.all::after{content:"";position:absolute;inset:0;background-image:radial-gradient(1.5px 1.5px at 20% 30%,#fff,transparent),radial-gradient(1px 1px at 70% 20%,#fff,transparent),radial-gradient(1.5px 1.5px at 85% 70%,#fff,transparent),radial-gradient(1px 1px at 40% 80%,#fff,transparent),radial-gradient(1px 1px at 60% 55%,#fff,transparent);pointer-events:none;opacity:.8}
+.modebar{justify-content:space-between;gap:8px}
+
+/* Weltall-Thema (immer dunkel) */
+html body.space.space.space{--paper:#0B1030;--sheet:#151B45;--ink:#ECEEFF;--muted:#A9AFDA;--line:#2C356B;--cover:#3A2783;--cover-2:#2B1D63;--gold:#F5C542;--btn:#1A2152;--btn-line:#3C4794}
+body.space{background-color:var(--paper);background-image:radial-gradient(1px 1px at 10% 15%,rgba(255,255,255,.7),transparent),radial-gradient(1px 1px at 80% 10%,rgba(255,255,255,.6),transparent),radial-gradient(1.5px 1.5px at 60% 40%,rgba(255,255,255,.5),transparent),radial-gradient(1px 1px at 25% 70%,rgba(255,255,255,.6),transparent),radial-gradient(1px 1px at 90% 85%,rgba(255,255,255,.5),transparent);background-attachment:fixed}
+body.space .cover{color:#F1EDFF}
+body.space .cover::after{border-color:rgba(245,197,66,.4)}
+.ah{grid-column:1/-1;font-family:var(--display);font-size:18px;margin:10px 2px 0}
+
+@media (prefers-reduced-motion: reduce){
+  .sticker.slam,.big.pop{animation:none}
+  .stampbig.slam svg{animation:none;transform:rotate(-8deg)}
+  .bar i{transition:none}
+}
+@media (max-width:380px){ .big{font-size:68px} .q{font-size:20px} .opt{font-size:16px} }
+</style>
+<style>body{padding-bottom:var(--cut,0px)}</style>
+<style>/* Nicht die Google-Site mitscrollen */html,body{overscroll-behavior:none}</style>
+<style>body{padding-top:var(--cutT,0px)}</style>
+<script>
+/* Ausgleich für Einbettung (z. B. Google Sites am Handy): nur den wirklich sichtbaren Bereich nutzen */
+(function(){
+  if (window.self === window.top || !('IntersectionObserver' in window)) return;
+  var root = document.documentElement, cb = -1, ct = -1, base = 0, lastH = -1;
+  function apply(b, t){
+    if (b === cb && t === ct) return; cb = b; ct = t;
+    root.style.setProperty('--cut', b + 'px'); root.style.setProperty('--cutT', t + 'px');
+    window.__cut = b; window.__cutT = t;
+    window.dispatchEvent(new Event('resize'));
+  }
+  // Spiele mit verschobener Zeichenfläche: Fingerposition passend umrechnen
+  ['pointerdown','pointermove','pointerup','pointercancel','wheel','click','contextmenu'].forEach(function(n){
+    window.addEventListener(n, function(e){
+      if (window.__shiftCanvasY && window.__cutT && e.target && e.target.tagName === 'CANVAS') {
+        try { Object.defineProperty(e, 'clientY', { value: e.clientY - window.__cutT, configurable: true }); } catch (x) {}
+      }
+    }, { capture: true, passive: true });
+  });
+  function start(){
+    var p = document.createElement('div');
+    p.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:100%;opacity:0;pointer-events:none;z-index:-1';
+    document.body.appendChild(p);
+    var th = []; for (var i = 0; i <= 100; i++) th.push(i / 100);
+    new IntersectionObserver(function(es){
+      var e = es[es.length - 1], r = e.intersectionRect, h = e.boundingClientRect.height;
+      if (r.height <= 0 || h <= 0) return;
+      var max = Math.round(h * 0.6);
+      var b = Math.min(max, Math.max(0, Math.round(h - r.bottom)));
+      var t = Math.min(max, Math.max(0, Math.round(r.top)));
+      // Seite unter einer festen Kopfzeile verschoben? (höchstens 100 px)
+      if (Math.abs(h - lastH) > 2) { lastH = h; base = b; } else if (t === 0 && b > base) base = b;
+      var hidden = Math.min(100, Math.max(0, base - b));
+      apply(b, Math.max(t, hidden > 8 ? hidden : 0));
+    }, { threshold: th }).observe(p);
+  }
+  root.style.setProperty('--cut', '0px'); root.style.setProperty('--cutT', '0px');
+  window.__cut = 0; window.__cutT = 0;
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+</head>
+<body>
+<div class="app">
+
+  <!-- Weltwahl -->
+  <section id="worldpick" class="hidden">
+    <div class="wp-head">
+      <div class="brand2">Weltenbummler</div>
+      <h1 id="wpTitle">Wohin geht die Reise?</h1>
+    </div>
+    <div class="worlds">
+      <button class="world erde" data-world="erde"><span class="wi">🌍</span><span><span class="wn">Erde</span><span class="wd" id="wdErde">Länder, Hauptstädte, Flaggen und Natur</span></span></button>
+      <button class="world all" data-world="all"><span class="wi">🪐</span><span><span class="wn">Weltall</span><span class="wd" id="wdAll">Planeten, Monde, Sterne und Raumfahrt</span></span></button>
+    </div>
+  </section>
+
+  <!-- Kinder-Startseite -->
+  <section id="kidhome" class="hidden">
+    <div class="modebar"><button class="modebtn toWorld">🧭 Welt wechseln</button><button class="modebtn" id="toAdult">Erwachsenen-Modus</button></div>
+    <div class="kidcover">
+      <h1 id="kTitle">Weltreise für Kinder</h1>
+      <div class="hi" id="kHi">Wähle ein Spiel und sammle Sterne und Tiersticker!</div>
+      <div class="kidstats">
+        <span id="kStars">⭐ 0</span>
+        <span id="kStick">🐾 0 von 24</span>
+      </div>
+    </div>
+    <div class="ktiles" id="ktiles"></div>
+    <button class="wide" id="openAlbum" style="font-size:19px">📒 Mein Stickeralbum</button>
+    <p class="note" id="kNote">Schaffst du 6 von 8 Fragen, bekommst du einen neuen Sticker.</p>
+  </section>
+
+  <!-- Stickeralbum -->
+  <section id="albumview" class="hidden">
+    <div class="qtop">
+      <button class="x" id="albumBack" aria-label="Zurück">←</button>
+      <h2 style="flex:1">Mein Stickeralbum</h2>
+    </div>
+    <div class="album" id="album"></div>
+  </section>
+
+  <!-- Startseite -->
+  <section id="home">
+    <div class="modebar"><button class="modebtn toWorld">🧭 Welt wechseln</button><button class="modebtn" id="toKid">🧸 Kindermodus</button></div>
+    <div class="cover">
+      <div class="top">
+        <div>
+          <div class="brand" id="brand">Weltenbummler-Pass</div>
+          <div class="rank" id="rank">Tourist</div>
+        </div>
+        <svg class="globe" id="globe" viewBox="0 0 64 64" fill="none" stroke="#D4A72C" stroke-width="2" aria-hidden="true">
+          <circle cx="32" cy="32" r="26"/><ellipse cx="32" cy="32" rx="11" ry="26"/>
+          <path d="M6 32h52M10 19h44M10 45h44"/>
+        </svg>
+      </div>
+      <div class="miles"><b id="miles">0</b><span>Meilen</span></div>
+      <div class="bar"><i id="bar" style="width:0%"></i></div>
+      <div class="next" id="next"></div>
+      <div class="chips">
+        <span class="chip" id="chipJoker">🃏 0 Joker</span>
+        <span class="chip" id="chipDays">🔥 0 Tage in Folge</span>
+        <span class="chip" id="chipStamps">🛂 0 Stempel</span>
+      </div>
+    </div>
+
+    <div class="label">Schwierigkeit</div>
+    <div class="seg" id="seg" role="group" aria-label="Schwierigkeit">
+      <button data-lvl="1">Leicht</button>
+      <button data-lvl="2">Mittel</button>
+      <button data-lvl="3">Profi</button>
+    </div>
+
+    <div class="label">Wähle deine Reise</div>
+    <div class="cats" id="cats"></div>
+
+    <button class="wide" id="openPass">Reisepass ansehen</button>
+    <p class="note"><span id="noteStamp">8 von 10 richtig gibt einen Stempel, 10 von 10 einen goldenen.</span> Fünf richtige Antworten in Folge bringen einen Joker. Ein 💡 Tipp halbiert die Meilen für die Frage.</p>
+  </section>
+
+  <!-- Quiz -->
+  <section id="quiz" class="hidden">
+    <div class="qtop">
+      <button class="x" id="quit" aria-label="Runde abbrechen">✕</button>
+      <div class="dots" id="dots"></div>
+      <div class="tally" id="tally">0</div>
+    </div>
+    <div class="card">
+      <div class="big" id="big" aria-hidden="true"></div>
+      <div class="q" id="q"></div>
+      <div class="hint hidden" id="hint" aria-live="polite"></div>
+    </div>
+    <div class="opts" id="opts"></div>
+    <div class="tools">
+      <div class="tbtns"><button class="joker" id="joker">🃏 50:50</button><button class="joker" id="tip">💡 Tipp</button></div>
+      <span class="fb" id="fb" aria-live="polite"></span>
+      <button class="go hidden" id="go">Weiter</button>
+    </div>
+  </section>
+
+  <!-- Ergebnis -->
+  <section id="result" class="hidden">
+    <div class="result">
+      <h2 id="rTitle"></h2>
+      <div class="score" id="rScore"></div>
+      <div class="earned" id="rMiles"></div>
+      <div class="stampbig" id="rStamp"></div>
+      <p class="msg" id="rMsg"></p>
+      <div id="rRank"></div>
+      <button class="wide primary" id="again">Nochmal spielen</button>
+      <button class="wide" id="toHome">Zur Übersicht</button>
+    </div>
+  </section>
+
+  <!-- Reisepass -->
+  <section id="passport" class="hidden">
+    <div class="qtop">
+      <button class="x" id="passBack" aria-label="Zurück">←</button>
+      <h2 style="flex:1" id="passTitle">Dein Reisepass</h2>
+    </div>
+    <div class="phead"><span>Reise</span><span>Leicht</span><span>Mittel</span><span>Profi</span></div>
+    <div class="pass" id="passGrid"></div>
+    <p class="note" id="passNote"></p>
+  </section>
+
+</div>
+
+<script>
+/* ---------- Daten ---------- */
+const CONT = {EU:'Europa',AS:'Asien',AF:'Afrika',NA:'Nordamerika',SA:'Südamerika',OC:'Ozeanien'};
+// [Land, Hauptstadt, Kontinent (null = mehrdeutig), Flagge, Stufe]
+const C = [
+ ['Deutschland','Berlin','EU','🇩🇪',1],['Frankreich','Paris','EU','🇫🇷',1],['Italien','Rom','EU','🇮🇹',1],
+ ['Spanien','Madrid','EU','🇪🇸',1],['Österreich','Wien','EU','🇦🇹',1],['Schweiz','Bern','EU','🇨🇭',1],
+ ['Vereinigtes Königreich','London','EU','🇬🇧',1],['Niederlande','Amsterdam','EU','🇳🇱',1],['Polen','Warschau','EU','🇵🇱',1],
+ ['Griechenland','Athen','EU','🇬🇷',1],['Portugal','Lissabon','EU','🇵🇹',1],['Tschechien','Prag','EU','🇨🇿',1],
+ ['Dänemark','Kopenhagen','EU','🇩🇰',1],['Schweden','Stockholm','EU','🇸🇪',1],['Norwegen','Oslo','EU','🇳🇴',1],
+ ['Irland','Dublin','EU','🇮🇪',1],['Belgien','Brüssel','EU','🇧🇪',1],['Russland','Moskau',null,'🇷🇺',1],
+ ['Türkei','Ankara',null,'🇹🇷',1],['USA','Washington, D.C.','NA','🇺🇸',1],['Kanada','Ottawa','NA','🇨🇦',1],
+ ['Mexiko','Mexiko-Stadt','NA','🇲🇽',1],['Brasilien','Brasília','SA','🇧🇷',1],['Argentinien','Buenos Aires','SA','🇦🇷',1],
+ ['China','Peking','AS','🇨🇳',1],['Japan','Tokio','AS','🇯🇵',1],['Indien','Neu-Delhi','AS','🇮🇳',1],
+ ['Ägypten','Kairo','AF','🇪🇬',1],['Australien','Canberra','OC','🇦🇺',1],
+ ['Finnland','Helsinki','EU','🇫🇮',2],['Ungarn','Budapest','EU','🇭🇺',2],['Kroatien','Zagreb','EU','🇭🇷',2],
+ ['Rumänien','Bukarest','EU','🇷🇴',2],['Bulgarien','Sofia','EU','🇧🇬',2],['Ukraine','Kiew','EU','🇺🇦',2],
+ ['Island','Reykjavík','EU','🇮🇸',2],['Slowakei','Bratislava','EU','🇸🇰',2],['Slowenien','Ljubljana','EU','🇸🇮',2],
+ ['Luxemburg','Luxemburg','EU','🇱🇺',2],['Serbien','Belgrad','EU','🇷🇸',2],['Thailand','Bangkok','AS','🇹🇭',2],
+ ['Südkorea','Seoul','AS','🇰🇷',2],['Vietnam','Hanoi','AS','🇻🇳',2],['Philippinen','Manila','AS','🇵🇭',2],
+ ['Saudi-Arabien','Riad','AS','🇸🇦',2],['Iran','Teheran','AS','🇮🇷',2],['Kenia','Nairobi','AF','🇰🇪',2],
+ ['Marokko','Rabat','AF','🇲🇦',2],['Nigeria','Abuja','AF','🇳🇬',2],['Chile','Santiago de Chile','SA','🇨🇱',2],
+ ['Peru','Lima','SA','🇵🇪',2],['Kolumbien','Bogotá','SA','🇨🇴',2],['Kuba','Havanna','NA','🇨🇺',2],
+ ['Neuseeland','Wellington','OC','🇳🇿',2],
+ ['Estland','Tallinn','EU','🇪🇪',3],['Lettland','Riga','EU','🇱🇻',3],['Litauen','Vilnius','EU','🇱🇹',3],
+ ['Albanien','Tirana','EU','🇦🇱',3],['Nordmazedonien','Skopje','EU','🇲🇰',3],['Moldau','Chișinău','EU','🇲🇩',3],
+ ['Kasachstan','Astana',null,'🇰🇿',3],['Mongolei','Ulaanbaatar','AS','🇲🇳',3],['Pakistan','Islamabad','AS','🇵🇰',3],
+ ['Bangladesch','Dhaka','AS','🇧🇩',3],['Nepal','Kathmandu','AS','🇳🇵',3],['Myanmar','Naypyidaw','AS','🇲🇲',3],
+ ['Malaysia','Kuala Lumpur','AS','🇲🇾',3],['Äthiopien','Addis Abeba','AF','🇪🇹',3],['Ghana','Accra','AF','🇬🇭',3],
+ ['Tansania','Dodoma','AF','🇹🇿',3],['Senegal','Dakar','AF','🇸🇳',3],['Madagaskar','Antananarivo','AF','🇲🇬',3],
+ ['Angola','Luanda','AF','🇦🇴',3],['Algerien','Algier','AF','🇩🇿',3],['Tunesien','Tunis','AF','🇹🇳',3],
+ ['Ecuador','Quito','SA','🇪🇨',3],['Uruguay','Montevideo','SA','🇺🇾',3],['Paraguay','Asunción','SA','🇵🇾',3],
+ ['Venezuela','Caracas','SA','🇻🇪',3],['Jamaika','Kingston','NA','🇯🇲',3],['Fidschi','Suva','OC','🇫🇯',3]
+];
+// [Bundesland, Landeshauptstadt, Stufe]
+const DE = [
+ ['Bayern','München',1],['Baden-Württemberg','Stuttgart',1],['Nordrhein-Westfalen','Düsseldorf',1],
+ ['Hessen','Wiesbaden',1],['Niedersachsen','Hannover',1],['Sachsen','Dresden',1],
+ ['Thüringen','Erfurt',2],['Rheinland-Pfalz','Mainz',2],['Schleswig-Holstein','Kiel',2],
+ ['Brandenburg','Potsdam',2],['Sachsen-Anhalt','Magdeburg',3],['Mecklenburg-Vorpommern','Schwerin',3],
+ ['Saarland','Saarbrücken',3]
+];
+// [Wahrzeichen, Emoji, Land, Stufe]
+const LM = [
+ ['der Eiffelturm','🗼','Frankreich',1],['das Kolosseum','🏛️','Italien',1],['die Freiheitsstatue','🗽','USA',1],
+ ['die Pyramiden von Gizeh','🔺','Ägypten',1],['die Chinesische Mauer','🧱','China',1],['der Taj Mahal','🕌','Indien',1],
+ ['das Opernhaus von Sydney','🎭','Australien',1],['der Big Ben','🕰️','Vereinigtes Königreich',1],
+ ['das Schloss Neuschwanstein','🏰','Deutschland',1],['die Sagrada Família','⛪','Spanien',1],
+ ['Machu Picchu','⛰️','Peru',2],['die Christusstatue Cristo Redentor','🙌','Brasilien',2],['die Akropolis','🏛️','Griechenland',2],
+ ['der Schiefe Turm von Pisa','🗼','Italien',2],['der Mount Fuji','🗻','Japan',2],['Angkor Wat','🛕','Kambodscha',3],
+ ['Petra, die Felsenstadt','🏜️','Jordanien',3],['die Moai-Statuen der Osterinsel','🗿','Chile',3],
+ ['Chichén Itzá','🔺','Mexiko',3],['der Tafelberg','⛰️','Südafrika',3],['die Hagia Sophia','🕌','Türkei',2],
+ ['die Victoriafälle','💦','Sambia und Simbabwe',3],
+ ['das Brandenburger Tor','🏛️','Deutschland',1],['die Golden Gate Bridge','🌉','USA',1],
+ ['das Atomium','⚛️','Belgien',2],['Stonehenge','🪨','Vereinigtes Königreich',2],['der Kreml','🏰','Russland',2],
+ ['der Burj Khalifa','🏙️','Vereinigte Arabische Emirate',2],['die Alhambra','🏰','Spanien',3],
+ ['die Petronas Towers','🏙️','Malaysia',3],['die Tower Bridge','🌉','Vereinigtes Königreich',1]
+];
+// [Frage, Emoji, Antwort, [Falsch x3], Stufe]
+const RC = [
+ ['Welcher ist der höchste Berg der Erde?','🏔️','Mount Everest',['K2','Mont Blanc','Kilimandscharo'],1],
+ ['Welcher ist der größte Ozean?','🌊','Pazifik',['Atlantik','Indischer Ozean','Arktischer Ozean'],1],
+ ['Welches ist das flächenmäßig größte Land?','🗺️','Russland',['Kanada','China','USA'],1],
+ ['Welcher ist der höchste Berg Deutschlands?','🏔️','Zugspitze',['Watzmann','Feldberg','Brocken'],1],
+ ['Welche ist die größte heiße Wüste der Erde?','🐪','Sahara',['Gobi','Kalahari','Atacama'],1],
+ ['Welches ist der kleinste Staat der Welt?','📏','Vatikanstadt',['Monaco','San Marino','Liechtenstein'],1],
+ ['Welches ist die größte Insel der Erde?','🏝️','Grönland',['Madagaskar','Borneo','Neuguinea'],2],
+ ['Welcher Kontinent hat die meisten Länder?','🌍','Afrika',['Asien','Europa','Südamerika'],2],
+ ['Welches Land hat die meisten Einwohner?','👥','Indien',['China','USA','Indonesien'],2],
+ ['Welcher ist der längste Fluss Europas?','🏞️','Wolga',['Donau','Rhein','Dnepr'],2],
+ ['Welcher ist der größte See, der ganz in Deutschland liegt?','🚣','Müritz',['Chiemsee','Starnberger See','Ammersee'],2],
+ ['Welcher ist der höchste Wasserfall der Erde?','💧','Salto Angel',['Niagarafälle','Victoriafälle','Iguazú-Fälle'],3],
+ ['Welcher ist der tiefste See der Erde?','🔵','Baikalsee',['Tanganjikasee','Kaspisches Meer','Oberer See'],3],
+ ['Welche ist die trockenste Wüste der Erde?','☀️','Atacama',['Sahara','Gobi','Namib'],3],
+ ['Wo liegt der tiefste Punkt der Weltmeere?','🤿','Marianengraben',['Puerto-Rico-Graben','Japangraben','Tongagraben'],3],
+ ['Welcher ist der höchste Berg Afrikas?','🏔️','Kilimandscharo',['Mount Kenya','Ruwenzori','Atlas'],2],
+ ['Welcher ist der höchste Berg der Alpen?','🏔️','Mont Blanc',['Matterhorn','Großglockner','Zugspitze'],2],
+ ['Welches Land hat die längste Küstenlinie?','🏖️','Kanada',['Norwegen','Indonesien','Australien'],3],
+ ['Welches Meer liegt zwischen Europa und Afrika?','🌊','Mittelmeer',['Nordsee','Ostsee','Rotes Meer'],1],
+ ['Welches Land hat die Form eines Stiefels?','👢','Italien',['Griechenland','Portugal','Kroatien'],1],
+ ['Welche Stadt in Deutschland hat die meisten Einwohner?','🏙️','Berlin',['Hamburg','München','Köln'],1],
+ ['Welcher Fluss fließt durch Hamburg?','🚢','Elbe',['Rhein','Weser','Oder'],1],
+ ['Welcher ist der größte Regenwald der Erde?','🌳','Amazonas-Regenwald',['Kongo-Regenwald','Daintree','Schwarzwald'],1],
+ ['Welcher Fluss fließt durch Wien, Budapest und Belgrad?','🏞️','Donau',['Rhein','Elbe','Moldau'],2],
+ ['Welches Gebirge gilt als Grenze zwischen Europa und Asien?','⛰️','Ural',['Alpen','Pyrenäen','Karpaten'],2],
+ ['In welchem Ozean liegt Madagaskar?','🏝️','Indischer Ozean',['Atlantik','Pazifik','Arktischer Ozean'],2],
+ ['Welches Gebirge liegt zwischen Frankreich und Spanien?','🏔️','Pyrenäen',['Alpen','Apennin','Karpaten'],2],
+ ['Wie heißt die Meerenge zwischen Europa und Afrika?','⛴️','Straße von Gibraltar',['Bosporus','Ärmelkanal','Straße von Messina'],3],
+ ['Welcher Fluss ist der wasserreichste der Erde?','💧','Amazonas',['Nil','Jangtse','Mississippi'],3]
+];
+
+// Kindermodus: [Emoji, Frage-Name, Ort]
+const TIERE = [
+ ['🦘','das Känguru','Australien','Es lebt auf einem Kontinent ganz weit weg, wo es auch Koalas gibt.'],['🐨','der Koala','Australien','Er frisst Eukalyptus-Blätter – dort, wo auch das Känguru hüpft.'],['🐼','der Panda','China','Er lebt in dem Land mit der langen Mauer.'],
+ ['🐧','der Kaiserpinguin','Antarktis','Er lebt ganz unten am Südpol im Eis.'],['🐻‍❄️','der Eisbär','Arktis','Er lebt ganz oben am Nordpol im Eis.'],['🦓','das Zebra','Afrika','Es lebt in der Savanne, zusammen mit Löwen und Elefanten.'],
+ ['🦒','die Giraffe','Afrika','Sie lebt in der Savanne, zusammen mit Zebras und Löwen.'],['🦙','das Lama','Südamerika','Es lebt hoch oben in den Anden-Bergen.'],['🦥','das Faultier','Südamerika','Es hängt in den Bäumen des Amazonas-Regenwalds.'],
+ ['🐅','der Bengal-Tiger','Indien','Er lebt in dem Land, in dem der Taj Mahal steht.'],['🦬','der Bison','Nordamerika','Er lebt in der Prärie, wo früher die Cowboys ritten.'],['🥝','der Kiwi-Vogel','Neuseeland','Er lebt auf Inseln südöstlich von Australien.']
+];
+const ORTE = ['Australien','China','Antarktis','Arktis','Afrika','Südamerika','Indien','Nordamerika','Neuseeland','Europa'];
+const STICKERS = [
+ ['🦁','Löwe'],['🐘','Elefant'],['🦒','Giraffe'],['🦓','Zebra'],['🐼','Panda'],['🐨','Koala'],
+ ['🦘','Känguru'],['🐧','Pinguin'],['🐻‍❄️','Eisbär'],['🦩','Flamingo'],['🐬','Delfin'],['🐢','Schildkröte'],
+ ['🦜','Papagei'],['🐅','Tiger'],['🦥','Faultier'],['🦙','Lama'],['🐊','Krokodil'],['🦛','Nilpferd'],
+ ['🦏','Nashorn'],['🐫','Kamel'],['🦉','Eule'],['🐋','Wal'],['🦭','Robbe'],['🦦','Otter']
+];
+const KCATS = [
+ {id:'k-tier', name:'Tiere der Welt', icon:'🦘', desc:'Wo lebt das Tier?', color:'#E8742A'},
+ {id:'k-flag', name:'Flaggen', icon:'🚩', desc:'Welches Land ist das?', color:'#2B8A3E'},
+ {id:'k-cont', name:'Kontinente', icon:'🌍', desc:'Wo liegt das Land?', color:'#7B4BD1'},
+ {id:'k-land', name:'Berühmte Orte', icon:'🏰', desc:'In welchem Land steht das?', color:'#D6336C'},
+ {id:'k-num', name:'Zahlen & Welt', icon:'🔢', desc:'Wie viele …?', color:'#0E8A87'},
+ {id:'k-pl', world:'all', name:'Planeten', icon:'🪐', desc:'Welcher Planet ist das?', color:'#D9661F'},
+ {id:'k-rf', world:'all', name:'Raketen & Sterne', icon:'🚀', desc:'Ab ins Weltall!', color:'#6A3FD1'}
+];
+const KROUND = 8, KNEED = 6;
+const PRAISE = ['Super!','Toll gemacht!','Richtig! 🎉','Klasse!','Genau so!','Spitze!'];
+
+// Zahlen & Bündnisse (Stand: EU 27, NATO 32 – bei Beitritten anpassen)
+const EU = ['Belgien','Bulgarien','Dänemark','Deutschland','Estland','Finnland','Frankreich','Griechenland','Irland','Italien','Kroatien','Lettland','Litauen','Luxemburg','Malta','Niederlande','Österreich','Polen','Portugal','Rumänien','Schweden','Slowakei','Slowenien','Spanien','Tschechien','Ungarn','Zypern'];
+const NATO = ['Albanien','Belgien','Bulgarien','Dänemark','Deutschland','Estland','Finnland','Frankreich','Griechenland','Island','Italien','Kanada','Kroatien','Lettland','Litauen','Luxemburg','Montenegro','Niederlande','Nordmazedonien','Norwegen','Polen','Portugal','Rumänien','Schweden','Slowakei','Slowenien','Spanien','Tschechien','Türkei','Ungarn','USA','Vereinigtes Königreich'];
+const WEDER = ['Schweiz','Serbien','Ukraine','Moldau','Bosnien und Herzegowina','Liechtenstein','Andorra','Monaco','San Marino','Kosovo','Georgien','Belarus'];
+const NUMQ = [
+ ['Wie viele Kontinente gibt es?','🌍','7',['5','6','8'],1],
+ ['Wie viele Bundesländer hat Deutschland?','🇩🇪','16',['12','14','18'],1],
+ ['Wie viele Länder gehören zur EU?','🇪🇺','27',['25','28','30'],1],
+ ['Welches Land ist aus der EU ausgetreten?','🚪','Vereinigtes Königreich',['Norwegen','Schweiz','Island'],1],
+ ['Wie viele Länder gehören zur NATO?','🛡️','32',['28','30','35'],2],
+ ['Wie viele Mitgliedstaaten haben die Vereinten Nationen?','🇺🇳','193',['180','195','201'],2],
+ ['Wie viele Nachbarländer hat Deutschland?','🧭','9',['7','8','10'],2],
+ ['Welches Land ist zuletzt der NATO beigetreten?','🛡️','Schweden',['Finnland','Nordmazedonien','Montenegro'],2],
+ ['In welcher Stadt hat die NATO ihr Hauptquartier?','🏢','Brüssel',['Genf','Den Haag','Straßburg'],2],
+ ['In welchem Jahr wurde die NATO gegründet?','📅','1949',['1945','1955','1961'],3],
+ ['Welches Land ist zuletzt der EU beigetreten?','🇪🇺','Kroatien',['Bulgarien','Rumänien','Malta'],3],
+ ['Wie viele EU-Länder sind auch in der NATO?','🤝','23',['19','21','27'],3],
+ ['Wie viele Länder liegen in Afrika?','🌍','54',['44','48','60'],3],
+ ['In welcher Stadt hat das EU-Parlament seinen offiziellen Sitz?','🏛️','Straßburg',['Brüssel','Luxemburg','Frankfurt'],3]
+];
+const KNUM = [
+ ['Wie viele Kontinente gibt es?','🌍','7',['5','9']],
+ ['Wie viele Bundesländer hat Deutschland?','🇩🇪','16',['10','20']],
+ ['Wie viele Nachbarländer hat Deutschland?','🧭','9',['4','14']],
+ ['Auf welchem Kontinent liegt Deutschland?','🗺️','Europa',['Asien','Afrika']],
+ ['Welcher Kontinent ist der größte?','🌏','Asien',['Europa','Australien']],
+ ['Welcher Kontinent ist am kältesten?','🥶','Antarktis',['Afrika','Europa']],
+ ['Zu wem gehört diese Flagge?','🇪🇺','Europäische Union',['Deutschland','USA']],
+ ['Welches Land gehört zur EU?','🤝','Frankreich',['USA','China']],
+ ['Welches Land ist das größte der Welt?','📏','Russland',['Deutschland','Frankreich']],
+ ['Wie heißt die Hauptstadt von Deutschland?','🏛️','Berlin',['München','Hamburg']]
+];
+
+// Nachbarländer (Landgrenzen) bzw. Lagebeschreibung für Inselstaaten – für Tipps und die Kategorie „Nachbarländer"
+const NB = {
+ 'Deutschland':['Dänemark','Polen','Tschechien','Österreich','Schweiz','Frankreich','Luxemburg','Belgien','Niederlande'],
+ 'Frankreich':['Belgien','Luxemburg','Deutschland','Schweiz','Italien','Spanien','Andorra','Monaco'],
+ 'Italien':['Frankreich','Schweiz','Österreich','Slowenien','San Marino','Vatikanstadt'],
+ 'Spanien':['Portugal','Frankreich','Andorra'],
+ 'Österreich':['Deutschland','Tschechien','Slowakei','Ungarn','Slowenien','Italien','Schweiz','Liechtenstein'],
+ 'Schweiz':['Deutschland','Österreich','Liechtenstein','Italien','Frankreich'],
+ 'Vereinigtes Königreich':['Irland'],
+ 'Niederlande':['Deutschland','Belgien'],
+ 'Polen':['Deutschland','Tschechien','Slowakei','Ukraine','Belarus','Litauen','Russland'],
+ 'Griechenland':['Albanien','Nordmazedonien','Bulgarien','Türkei'],
+ 'Portugal':['Spanien'],
+ 'Tschechien':['Deutschland','Polen','Slowakei','Österreich'],
+ 'Dänemark':['Deutschland'],
+ 'Schweden':['Norwegen','Finnland'],
+ 'Norwegen':['Schweden','Finnland','Russland'],
+ 'Irland':['Vereinigtes Königreich'],
+ 'Belgien':['Frankreich','Luxemburg','Deutschland','Niederlande'],
+ 'Russland':['Norwegen','Finnland','Estland','Lettland','Litauen','Polen','Belarus','Ukraine','Georgien','Kasachstan','China','Mongolei'],
+ 'Türkei':['Griechenland','Bulgarien','Georgien','Armenien','Iran','Irak','Syrien'],
+ 'USA':['Kanada','Mexiko'],
+ 'Kanada':['USA'],
+ 'Mexiko':['USA','Guatemala','Belize'],
+ 'Brasilien':['Argentinien','Uruguay','Paraguay','Bolivien','Peru','Kolumbien','Venezuela','Guyana'],
+ 'Argentinien':['Chile','Bolivien','Paraguay','Brasilien','Uruguay'],
+ 'China':['Russland','Mongolei','Kasachstan','Indien','Nepal','Vietnam','Pakistan','Myanmar','Nordkorea','Laos'],
+ 'Japan':'Ein Inselstaat im Pazifik, östlich von China und Korea.',
+ 'Indien':['Pakistan','China','Nepal','Bangladesch','Myanmar','Bhutan'],
+ 'Ägypten':['Libyen','Sudan','Israel'],
+ 'Australien':'Ein Land, das einen ganzen Kontinent einnimmt – südlich von Indonesien.',
+ 'Finnland':['Schweden','Norwegen','Russland'],
+ 'Ungarn':['Österreich','Slowakei','Ukraine','Rumänien','Serbien','Kroatien','Slowenien'],
+ 'Kroatien':['Slowenien','Ungarn','Serbien','Bosnien und Herzegowina','Montenegro'],
+ 'Rumänien':['Ungarn','Ukraine','Moldau','Bulgarien','Serbien'],
+ 'Bulgarien':['Rumänien','Serbien','Nordmazedonien','Griechenland','Türkei'],
+ 'Ukraine':['Polen','Slowakei','Ungarn','Rumänien','Moldau','Belarus','Russland'],
+ 'Island':'Ein Inselstaat im Nordatlantik, zwischen Norwegen und Grönland.',
+ 'Slowakei':['Tschechien','Polen','Ukraine','Ungarn','Österreich'],
+ 'Slowenien':['Italien','Österreich','Ungarn','Kroatien'],
+ 'Luxemburg':['Belgien','Deutschland','Frankreich'],
+ 'Serbien':['Ungarn','Rumänien','Bulgarien','Nordmazedonien','Kroatien','Bosnien und Herzegowina','Montenegro'],
+ 'Thailand':['Myanmar','Laos','Kambodscha','Malaysia'],
+ 'Südkorea':['Nordkorea'],
+ 'Vietnam':['China','Laos','Kambodscha'],
+ 'Philippinen':'Ein Inselstaat in Südostasien, zwischen Taiwan und Indonesien.',
+ 'Saudi-Arabien':['Jordanien','Irak','Kuwait','Katar','Vereinigte Arabische Emirate','Oman','Jemen'],
+ 'Iran':['Irak','Türkei','Armenien','Aserbaidschan','Turkmenistan','Afghanistan','Pakistan'],
+ 'Kenia':['Tansania','Uganda','Südsudan','Äthiopien','Somalia'],
+ 'Marokko':'Liegt im Nordwesten Afrikas, gleich gegenüber von Spanien, und grenzt an Algerien.',
+ 'Nigeria':['Benin','Niger','Tschad','Kamerun'],
+ 'Chile':['Peru','Bolivien','Argentinien'],
+ 'Peru':['Ecuador','Kolumbien','Brasilien','Bolivien','Chile'],
+ 'Kolumbien':['Panama','Venezuela','Brasilien','Peru','Ecuador'],
+ 'Kuba':'Ein Inselstaat in der Karibik, südlich von Florida.',
+ 'Neuseeland':'Ein Inselstaat im Pazifik, südöstlich von Australien.',
+ 'Estland':['Lettland','Russland'],
+ 'Lettland':['Estland','Litauen','Belarus','Russland'],
+ 'Litauen':['Lettland','Belarus','Polen','Russland'],
+ 'Albanien':['Montenegro','Kosovo','Nordmazedonien','Griechenland'],
+ 'Nordmazedonien':['Serbien','Kosovo','Bulgarien','Griechenland','Albanien'],
+ 'Moldau':['Rumänien','Ukraine'],
+ 'Kasachstan':['Russland','China','Kirgisistan','Usbekistan','Turkmenistan'],
+ 'Mongolei':['Russland','China'],
+ 'Pakistan':['Indien','China','Afghanistan','Iran'],
+ 'Bangladesch':['Indien','Myanmar'],
+ 'Nepal':['Indien','China'],
+ 'Myanmar':['Bangladesch','Indien','China','Laos','Thailand'],
+ 'Malaysia':['Thailand','Indonesien','Brunei'],
+ 'Äthiopien':['Eritrea','Dschibuti','Somalia','Kenia','Südsudan','Sudan'],
+ 'Ghana':['Elfenbeinküste','Burkina Faso','Togo'],
+ 'Tansania':['Kenia','Uganda','Ruanda','Burundi','Sambia','Malawi','Mosambik'],
+ 'Senegal':['Mauretanien','Mali','Guinea','Guinea-Bissau','Gambia'],
+ 'Madagaskar':'Eine riesige Insel im Indischen Ozean, vor der Ostküste Afrikas.',
+ 'Angola':['Namibia','Sambia','Demokratische Republik Kongo'],
+ 'Algerien':['Marokko','Tunesien','Libyen','Niger','Mali','Mauretanien'],
+ 'Tunesien':['Algerien','Libyen'],
+ 'Ecuador':['Kolumbien','Peru'],
+ 'Uruguay':['Brasilien','Argentinien'],
+ 'Paraguay':['Argentinien','Brasilien','Bolivien'],
+ 'Venezuela':['Kolumbien','Brasilien','Guyana'],
+ 'Jamaika':'Ein Inselstaat in der Karibik, südlich von Kuba.',
+ 'Fidschi':'Ein Inselstaat im Südpazifik, nördlich von Neuseeland.',
+ 'Kambodscha':['Thailand','Laos','Vietnam'],
+ 'Jordanien':['Israel','Syrien','Irak','Saudi-Arabien'],
+ 'Südafrika':['Namibia','Botswana','Simbabwe','Mosambik'],
+ 'Vereinigte Arabische Emirate':['Saudi-Arabien','Oman'],
+ 'Montenegro':['Kroatien','Bosnien und Herzegowina','Serbien','Kosovo','Albanien'],
+ 'Malta':'Ein kleiner Inselstaat im Mittelmeer, südlich von Sizilien.',
+ 'Zypern':'Ein Inselstaat im östlichen Mittelmeer, südlich der Türkei.'
+};
+
+/* ---------- Weltall ---------- */
+const PLANETS = ['Merkur','Venus','Erde','Mars','Jupiter','Saturn','Uranus','Neptun'];
+// [Kategorie, Frage, Emoji, Antwort, [Falsch x3], Stufe, Tipp (optional)]
+const SPQ = [
+ ['pl','Welcher Planet wird der Rote Planet genannt?','🔴','Mars',['Venus','Jupiter','Merkur'],1],
+ ['pl','Welcher ist der größte Planet unseres Sonnensystems?','🪐','Jupiter',['Saturn','Neptun','Erde'],1],
+ ['pl','Welcher Planet ist für seine großen Ringe berühmt?','🪐','Saturn',['Jupiter','Mars','Venus'],1],
+ ['pl','Wie viele Planeten hat unser Sonnensystem?','☀️','8',['7','9','10'],1],
+ ['pl','Welcher Planet ist unser Zuhause?','🏡','Erde',['Mars','Venus','Jupiter'],1],
+ ['pl','Um welchen Stern kreisen alle Planeten unseres Sonnensystems?','☀️','Sonne',['Polarstern','Sirius','Wega'],1],
+ ['pl','Welcher ist der kleinste Planet?','🔘','Merkur',['Mars','Venus','Uranus'],2,'Er ist auch der Sonne am nächsten.'],
+ ['pl','Welcher ist der heißeste Planet?','🔥','Venus',['Merkur','Mars','Jupiter'],2,'Er ist nicht der Sonne am nächsten – aber seine dicke Wolkenhülle hält die Hitze fest.'],
+ ['pl','Was ist Pluto seit 2006?','❄️','Ein Zwergplanet',['Ein Planet','Ein Mond','Ein Komet'],2,'Er ist zu klein, um als richtiger Planet zu zählen.'],
+ ['pl','Auf welchem Planeten tobt der Große Rote Fleck, ein riesiger Wirbelsturm?','🌀','Jupiter',['Mars','Saturn','Neptun'],2,'Es ist der größte Planet.'],
+ ['pl','Welcher Planet wird auch Morgenstern oder Abendstern genannt?','✨','Venus',['Mars','Merkur','Jupiter'],2,'Er ist nach der römischen Göttin der Liebe benannt.'],
+ ['pl','Auf welchem Planeten steht der höchste Vulkan des Sonnensystems, der Olympus Mons?','🌋','Mars',['Venus','Erde','Merkur'],3,'Es ist der Rote Planet.'],
+ ['pl','Welcher Planet ist so stark gekippt, dass er quasi auf der Seite um die Sonne rollt?','🔄','Uranus',['Neptun','Saturn','Mars'],3,'Es ist der siebte Planet von der Sonne aus.'],
+ ['pl','Welcher der acht Planeten wurde zuletzt entdeckt?','🔭','Neptun',['Uranus','Saturn','Jupiter'],3,'Es ist der Planet ganz außen.'],
+ ['pl','Welcher Planet hat die meisten bekannten Monde?','🌙','Saturn',['Jupiter','Uranus','Mars'],3,'Es ist der Planet mit den berühmten Ringen.'],
+ ['pl','Bei welchem Planeten dauert ein Tag länger als ein Jahr?','⏳','Venus',['Merkur','Mars','Neptun'],3,'Es ist der heißeste Planet.'],
+ ['mo','Wie viele Monde hat die Erde?','🌙','1',['0','2','3'],1],
+ ['mo','Was ist die Sonne?','☀️','Ein Stern',['Ein Planet','Ein Mond','Eine Galaxie'],1],
+ ['mo','Wie lange braucht die Erde für eine Runde um die Sonne?','🌍','Ein Jahr',['Einen Tag','Einen Monat','Zehn Jahre'],1],
+ ['mo','Wie heißt unsere Galaxie?','🌌','Milchstraße',['Andromeda','Sombrero-Galaxie','Große Magellansche Wolke'],1],
+ ['mo','Was passiert bei einer Sonnenfinsternis?','🌑','Der Mond schiebt sich vor die Sonne',['Die Erde schiebt sich vor den Mond','Die Sonne geht kurz aus','Wolken verdecken die Sonne'],1,'Ein Himmelskörper wirft seinen Schatten auf die Erde.'],
+ ['mo','Wie lange braucht das Licht von der Sonne bis zur Erde?','💡','Etwa 8 Minuten',['Etwa 8 Sekunden','Etwa 1 Stunde','Etwa 1 Tag'],2,'Licht ist schnell – aber die Sonne ist rund 150 Millionen Kilometer entfernt.'],
+ ['mo','Wie viele Monde hat der Mars?','🔴','2',['0','1','4'],2,'Sie heißen Phobos und …'],
+ ['mo','Was ist ein Lichtjahr?','📏','Eine Entfernung',['Eine Zeitspanne','Eine Helligkeit','Ein Gewicht'],2,'Gemeint ist, wie weit das Licht in einem Jahr kommt.'],
+ ['mo','Welcher Stern zeigt am Nachthimmel ungefähr nach Norden?','🧭','Polarstern',['Sirius','Wega','Rigel'],1],
+ ['mo','Wie nennt man den Mond, wenn er ganz rund leuchtet?','🌕','Vollmond',['Neumond','Halbmond','Sichelmond'],1],
+ ['mo','Wie nennt man eine Gruppe von Sternen, die zusammen ein Bild ergeben?','✨','Sternbild',['Sternhaufen','Galaxie','Komet'],1],
+ ['mo','Welche bekannte Sternengruppe sieht aus wie ein Wagen mit Deichsel?','🛒','Großer Wagen',['Orion','Kassiopeia','Skorpion'],1],
+ ['mo','Was geht am Morgen im Osten auf?','🌅','Die Sonne',['Der Mond','Der Polarstern','Der Mars'],1],
+ ['mo','Was ist eine Sternschnuppe meistens?','🌠','Ein kleines Gesteinskorn, das in der Luft verglüht',['Ein Stern, der herunterfällt','Ein Satellit','Ein Flugzeug'],2,'Sie ist oft nicht größer als ein Sandkorn.'],
+ ['mo','Wie heißt der größte Mond des Saturn?','🪐','Titan',['Ganymed','Europa','Phobos'],2],
+ ['mo','Welcher ist der größte Mond im ganzen Sonnensystem?','🌕','Ganymed',['Titan','Unser Mond','Io'],3,'Er kreist um den Jupiter.'],
+ ['mo','Welcher Jupitermond hat die meisten aktiven Vulkane?','🌋','Io',['Europa','Kallisto','Ganymed'],3,'Sein Name hat nur zwei Buchstaben.'],
+ ['mo','Wie heißt der nächste Stern nach der Sonne?','⭐','Proxima Centauri',['Sirius','Polarstern','Beteigeuze'],3,'„Proxima" heißt auf Latein „die Nächste".'],
+ ['mo','Welcher ist der hellste Stern am Nachthimmel?','✨','Sirius',['Polarstern','Wega','Beteigeuze'],3,'Er gehört zum Sternbild Großer Hund.'],
+ ['mo','Welche große Nachbargalaxie kann man ohne Fernrohr sehen?','🌌','Andromeda',['Sombrero-Galaxie','Whirlpool-Galaxie','Zigarren-Galaxie'],3],
+ ['rf','Wer war der erste Mensch im Weltall?','🧑‍🚀','Juri Gagarin',['Neil Armstrong','Buzz Aldrin','Sigmund Jähn'],1,'Er kam aus der Sowjetunion und flog 1961.'],
+ ['rf','Wer betrat als erster Mensch den Mond?','👣','Neil Armstrong',['Buzz Aldrin','Juri Gagarin','Alexander Gerst'],1,'Er war Amerikaner und Kommandant von Apollo 11.'],
+ ['rf','In welchem Jahr landeten zum ersten Mal Menschen auf dem Mond?','🌕','1969',['1959','1975','1981'],1],
+ ['rf','Wie heißt die große internationale Raumstation?','🛰️','ISS',['Mir','Skylab','Apollo'],1],
+ ['rf','Wie heißt die US-Raumfahrtbehörde?','🇺🇸','NASA',['ESA','DLR','Roskosmos'],1],
+ ['rf','Wer war der erste Deutsche im Weltall?','🇩🇪','Sigmund Jähn',['Alexander Gerst','Ulf Merbold','Matthias Maurer'],2,'Er stammte aus der DDR und flog 1978.'],
+ ['rf','Wie hieß der erste künstliche Satellit?','📡','Sputnik 1',['Explorer 1','Apollo 11','Hubble'],2,'Er wurde 1957 von der Sowjetunion gestartet.'],
+ ['rf','Wie hieß die Mission der ersten Mondlandung?','🚀','Apollo 11',['Apollo 13','Gemini 4','Artemis 1'],1],
+ ['rf','Wie heißt die Europäische Weltraumorganisation?','🇪🇺','ESA',['NASA','DLR','CNES'],1],
+ ['rf','Wie nennt man Raumfahrer aus Russland?','🇷🇺','Kosmonauten',['Taikonauten','Spationauten','Aeronauten'],1],
+ ['rf','Wie heißt die Schutzkleidung, die Astronauten draußen im All tragen?','🧑‍🚀','Raumanzug',['Taucheranzug','Overall','Schutzweste'],1],
+ ['rf','Was bringt eine Rakete ins All?','🚀','Der Schub ihrer Triebwerke',['Große Flügel','Ein Propeller','Starker Rückenwind'],1],
+ ['rf','Wie heißt das NASA-Programm, das wieder Menschen zum Mond bringen soll?','🌙','Artemis',['Apollo','Gemini','Mercury'],2,'Benannt nach der Zwillingsschwester des Apollo.'],
+ ['rf','Welcher deutsche Astronaut war Kommandant der ISS?','👨‍🚀','Alexander Gerst',['Matthias Maurer','Thomas Reiter','Ulf Merbold'],3],
+ ['rf','Wie heißt der Mars-Rover, der 2021 auf dem Mars landete?','🤖','Perseverance',['Curiosity','Opportunity','Sojourner'],3,'Sein Name bedeutet „Ausdauer".'],
+ ['rf','Welches große Weltraumteleskop startete Ende 2021?','🔭','James Webb',['Hubble','Kepler','Spitzer'],3],
+ ['rf','Welches Tier umkreiste 1957 als erstes Lebewesen die Erde?','🐕','Hündin Laika',['Affe Ham','Katze Félicette','Schimpanse Enos'],3],
+ ['rf','Wie viele Menschen sind bisher auf dem Mond gelaufen?','👣','12',['2','6','24'],3]
+];
+// Kindermodus Weltall: [Kategorie, Frage, Emoji, Antwort, [Falsch x2], Tipp (optional)]
+const KSP = [
+ ['k-pl','Auf welchem Planeten leben wir?','🏡','Erde',['Mars','Saturn'],'Er ist blau und grün.'],
+ ['k-pl','Welcher Planet hat große Ringe?','🪐','Saturn',['Erde','Mars']],
+ ['k-pl','Welcher Planet ist rot?','🔴','Mars',['Jupiter','Neptun']],
+ ['k-pl','Welcher Planet ist der größte?','🐘','Jupiter',['Merkur','Erde'],'Er hat einen großen roten Fleck.'],
+ ['k-pl','Welcher Planet ist der Sonne am nächsten?','☀️','Merkur',['Neptun','Saturn']],
+ ['k-pl','Wie viele Planeten kreisen um unsere Sonne?','🔢','8',['3','20']],
+ ['k-pl','Welcher Planet ist am heißesten?','🔥','Venus',['Neptun','Uranus'],'Er leuchtet abends hell am Himmel.'],
+ ['k-pl','Welche Farbe hat die Erde, wenn man sie aus dem All sieht?','🌍','Vor allem blau',['Vor allem rot','Vor allem gelb'],'Denk an das viele Wasser!'],
+ ['k-pl','Welcher Planet ist ganz außen?','🥶','Neptun',['Erde','Merkur'],'Dort ist es eiskalt.'],
+ ['k-rf','Was ist die Sonne?','☀️','Ein Stern',['Ein Planet','Ein Mond'],'Sie leuchtet von ganz allein.'],
+ ['k-rf','Was kreist um die Erde?','🌙','Der Mond',['Die Sonne','Der Mars']],
+ ['k-rf','Womit fliegen Astronauten ins All?','🚀','Mit einer Rakete',['Mit einem Flugzeug','Mit einem Heißluftballon']],
+ ['k-rf','Wie nennt man Menschen, die ins All fliegen?','🧑‍🚀','Astronauten',['Piloten','Kapitäne']],
+ ['k-rf','Wer ist als Erster auf dem Mond gelaufen?','👣','Neil Armstrong',['Albert Einstein','Wolfgang Amadeus Mozart'],'Er war ein Astronaut aus Amerika.'],
+ ['k-rf','Wie heißt unsere Galaxie?','🌌','Milchstraße',['Sternenweg','Mondallee'],'Sie heißt wie ein Getränk und eine Straße.'],
+ ['k-rf','Was ist eine Sternschnuppe?','🌠','Ein Steinchen, das am Himmel verglüht',['Ein Stern, der herunterfällt','Ein Glühwürmchen']],
+ ['k-rf','Wie heißt das Haus im All, in dem Astronauten wohnen?','🛰️','Raumstation',['Mondhotel','Sternenhaus']],
+ ['k-rf','Wann sieht man die Sterne am besten?','🌃','Nachts',['Mittags','Am Morgen']],
+ ['k-rf','Was brauchen Astronauten draußen im All zum Atmen?','🫧','Einen Raumanzug mit Luft',['Eine Taucherbrille','Einen Regenschirm']]
+];
+const SPACE_STICKERS = [
+ ['🚀','Rakete'],['🛸','Ufo'],['🌙','Mond'],['⭐','Stern'],['☄️','Komet'],['🪐','Saturn'],
+ ['🌍','Erde'],['👩‍🚀','Astronautin'],['🛰️','Satellit'],['🔭','Teleskop'],['🌌','Milchstraße'],['☀️','Sonne']
+];
+const RANKS_ALL = [[0,'Sternengucker'],[150,'Raumkadett'],[500,'Astronaut'],[1200,'Kommandant'],[2500,'Raumschiff-Kapitän'],[5000,'Galaxie-Legende']];
+
+const CATS = [
+ {id:'cap', name:'Hauptstädte', icon:'🏛️', desc:'Welche Stadt regiert das Land?', ink:'#C2272D'},
+ {id:'flag', name:'Flaggen', icon:'🚩', desc:'Erkenne das Land an der Flagge', ink:'#2B4C9B'},
+ {id:'cont', name:'Kontinente', icon:'🌍', desc:'Wo auf der Welt liegt das Land?', ink:'#1F7A4D'},
+ {id:'de', name:'Bundesländer', icon:'🇩🇪', desc:'Deutschlands Landeshauptstädte', ink:'#6B3FA0'},
+ {id:'land', name:'Wahrzeichen', icon:'🗽', desc:'Berühmte Orte und ihre Länder', ink:'#B5651D'},
+ {id:'rec', name:'Rekorde & Natur', short:'NATUR', icon:'🏔️', desc:'Berge, Flüsse, Meere und mehr', ink:'#0E7C86'},
+ {id:'nb', name:'Nachbarländer', icon:'🧭', desc:'Wer grenzt an wen?', ink:'#8A3B12'},
+ {id:'pl', world:'all', name:'Planeten', icon:'🪐', desc:'Die acht Planeten und Pluto', ink:'#C25E1B'},
+ {id:'mo', world:'all', name:'Sonne, Mond & Sterne', short:'STERNE', icon:'🌙', desc:'Monde, Sterne und Galaxien', ink:'#4B5BD6'},
+ {id:'rf', world:'all', name:'Raumfahrt', icon:'🚀', desc:'Astronauten, Raketen, Missionen', ink:'#B3263A'},
+ {id:'num', name:'Zahlen & Bündnisse', short:'BÜNDNISSE', icon:'🇪🇺', desc:'EU, NATO und Zahlen der Welt', ink:'#1D4E89'}
+];
+const LVL = {1:'Leicht',2:'Mittel',3:'Profi'};
+const RANKS = [[0,'Tourist'],[150,'Rucksackreisende'],[500,'Entdecker'],[1200,'Kartograf'],[2500,'Weltreisende'],[5000,'Globus-Legende']];
+const ROUND = 10;
+
+/* ---------- Helfer ---------- */
+const $ = id => document.getElementById(id);
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const pickDistinct = (pool, n, exclude) => shuffle(pool.filter(x => !exclude.includes(x))).filter((x, i, arr) => arr.indexOf(x) === i).slice(0, n);
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+const rankOf = m => { const R = WORLD === 'all' ? RANKS_ALL : RANKS; let r = R[0], nx = null; for (let i = 0; i < R.length; i++) { if (m >= R[i][0]) { r = R[i]; nx = R[i + 1] || null; } } return {r, nx}; };
+const wc = () => CATS.filter(c => (c.world || 'erde') === WORLD);
+const wk = () => KCATS.filter(c => (c.world || 'erde') === WORLD);
+const wStickers = () => WORLD === 'all' ? SPACE_STICKERS : STICKERS;
+const wStampCount = () => { const ids = wc().map(c => c.id); return Object.keys(S.stamps).filter(k => ids.includes(k.replace(/-\d$/, ''))); };
+
+/* ---------- Fragen ---------- */
+function distractCountries(c, n) {
+  const same = C.filter(x => x !== c && x[2] && x[2] === c[2]).map(x => x[0]);
+  const all = C.filter(x => x !== c).map(x => x[0]);
+  let out = pickDistinct(same, n, [c[0]]);
+  if (out.length < n) out = out.concat(pickDistinct(all, n - out.length, out.concat(c[0])));
+  return out;
+}
+function distractCapitals(c, n) {
+  const same = C.filter(x => x !== c && x[2] && x[2] === c[2]).map(x => x[1]);
+  const all = C.filter(x => x !== c).map(x => x[1]);
+  let out = pickDistinct(same, n, [c[1]]);
+  if (out.length < n) out = out.concat(pickDistinct(all, n - out.length, out.concat(c[1])));
+  return out;
+}
+function buildPool(cat, lvl) {
+  const P = [];
+  if (cat === 'cap') C.filter(c => c[4] <= lvl).forEach(c => {
+    P.push(() => ({big: c[3], q: 'Wie heißt die Hauptstadt ' + capOf(c[0]) + '?', a: c[1], wrong: distractCapitals(c, 3)}));
+    P.push(() => ({big: '🏛️', q: c[1] + ' ist die Hauptstadt von …', a: c[0], wrong: distractCountries(c, 3), country: c[0]}));
+  });
+  if (cat === 'flag') C.filter(c => c[4] <= lvl).forEach(c => {
+    P.push(() => ({big: c[3], q: 'Zu welchem Land gehört diese Flagge?', a: c[0], wrong: distractCountries(c, 3), country: c[0]}));
+    P.push(() => {
+      const w = distractCountries(c, 3).map(n => C.find(x => x[0] === n)[3]);
+      return {big: '🔍', q: 'Welche Flagge gehört zu ' + dat(c[0]) + '?', a: c[3], wrong: w, emo: true};
+    });
+  });
+  if (cat === 'cont') {
+    C.filter(c => c[4] <= lvl && c[2]).forEach(c => P.push(() => ({
+      big: c[3], q: 'Auf welchem Kontinent liegt ' + nom(c[0]) + '?', a: CONT[c[2]],
+      wrong: pickDistinct(Object.values(CONT), 3, [CONT[c[2]]]), hint: countryHint(c[0], c[0])})));
+    Object.keys(CONT).forEach(k => {
+      const inK = C.filter(c => c[2] === k && c[4] <= lvl);
+      if (!inK.length) return;
+      const gen = () => {
+        const c = inK[Math.floor(Math.random() * inK.length)];
+        return {big: '🌐', q: 'Welches dieser Länder liegt in ' + CONT[k] + '?', a: c[0],
+          wrong: pickDistinct(C.filter(x => x[2] && x[2] !== k && x[4] <= Math.max(lvl, 2)).map(x => x[0]), 3, []), country: c[0]};
+      };
+      P.push(gen); P.push(gen);
+    });
+  }
+  if (cat === 'nb') C.filter(c => c[4] <= lvl && Array.isArray(NB[c[0]])).forEach(c => {
+    const nbs = NB[c[0]];
+    const others = C.filter(x => x[0] !== c[0] && !nbs.includes(x[0]) && (!c[2] || !x[2] || x[2] === c[2])).map(x => x[0]);
+    if (others.length < 3) return;
+    P.push(() => { const a = nbs[Math.floor(Math.random() * nbs.length)];
+      return {big: c[3], q: 'Welches Land grenzt an ' + nom(c[0]) + '?', a, wrong: pickDistinct(others, 3, []), country: a}; });
+    if (nbs.length >= 3) P.push(() => ({big: c[3], q: 'Welches Land grenzt NICHT an ' + nom(c[0]) + '?',
+      a: others[Math.floor(Math.random() * others.length)], wrong: pickDistinct(nbs, 3, []),
+      emoHint: true}));
+  });
+  if (cat === 'de') DE.filter(d => d[2] <= lvl).forEach(d => {
+    P.push(() => ({big: '🏙️', q: 'Wie heißt die Landeshauptstadt von ' + d[0] + '?', a: d[1],
+      wrong: pickDistinct(DE.map(x => x[1]), 3, [d[1]])}));
+    P.push(() => ({big: '🧭', q: d[1] + ' ist die Hauptstadt von …', a: d[0],
+      wrong: pickDistinct(DE.map(x => x[0]), 3, [d[0]])}));
+  });
+  if (cat === 'land') LM.filter(l => l[3] <= lvl).forEach(l => P.push(() => {
+    const extra = ['Kambodscha','Jordanien','Südafrika','Sambia und Simbabwe','Vereinigte Arabische Emirate'];
+    const names = C.map(x => x[0]).concat(extra);
+    return {big: l[1], q: 'In welchem Land steht ' + l[0] + '?', a: l[2],
+      wrong: pickDistinct(names, 3, [l[2], l[2] === 'Sambia und Simbabwe' ? '' : 'Sambia und Simbabwe']), country: l[2]};
+  }));
+  const easy = C.filter(c => c[4] === 1);
+  if (cat === 'k-tier') TIERE.forEach(t => P.push(() => ({
+    big: t[0], q: 'Wo lebt ' + t[1] + '?', a: t[2], wrong: pickDistinct(ORTE, 2, [t[2]]), hint: t[3]})));
+  if (cat === 'k-flag') easy.forEach(c => P.push(() => ({
+    big: c[3], q: 'Zu welchem Land gehört diese Flagge?', a: c[0], wrong: pickDistinct(easy.map(x => x[0]), 2, [c[0]]), country: c[0]})));
+  if (cat === 'k-cont') easy.filter(c => c[2]).forEach(c => P.push(() => ({
+    big: c[3], q: 'Auf welchem Kontinent liegt ' + nom(c[0]) + '?', a: CONT[c[2]], wrong: pickDistinct(Object.values(CONT), 2, [CONT[c[2]]]), hint: countryHint(c[0], c[0])})));
+  if (cat === 'k-land') LM.filter(l => l[3] === 1).forEach(l => P.push(() => ({
+    big: l[1], q: 'In welchem Land steht ' + l[0] + '?', a: l[2], wrong: pickDistinct(easy.map(x => x[0]), 2, [l[2]]), country: l[2]})));
+  if (cat === 'k-num') KNUM.forEach(r => P.push(() => ({big: r[1], q: r[0], a: r[2], wrong: r[3].slice()})));
+  if (cat === 'num') {
+    NUMQ.filter(r => r[4] <= lvl).forEach(r => P.push(() => ({big: r[1], q: r[0], a: r[2], wrong: r[3].slice()})));
+    const one = a => a[Math.floor(Math.random() * a.length)];
+    const nonEU = NATO.filter(x => !EU.includes(x)).concat(WEDER);
+    const nonNATO = EU.filter(x => !NATO.includes(x)).concat(WEDER);
+    const lift = q => { q.country = q.a; return q; };
+    const gens = [
+      [1, () => lift({big:'🇪🇺', q:'Welches dieser Länder ist in der EU?', a:one(EU), wrong:pickDistinct(nonEU, 3, [])})],
+      [1, () => lift({big:'🇪🇺', q:'Welches dieser Länder ist nicht in der EU?', a:one(nonEU), wrong:pickDistinct(EU, 3, [])})],
+      [2, () => lift({big:'🛡️', q:'Welches dieser Länder ist in der NATO?', a:one(NATO), wrong:pickDistinct(nonNATO, 3, [])})],
+      [2, () => lift({big:'🛡️', q:'Welches Land ist in der NATO, aber nicht in der EU?', a:one(NATO.filter(x => !EU.includes(x))), wrong:pickDistinct(EU, 3, [])})],
+      [3, () => lift({big:'🤝', q:'Welches Land ist in der EU, aber nicht in der NATO?', a:one(EU.filter(x => !NATO.includes(x))), wrong:pickDistinct(NATO, 3, [])})]
+    ];
+    gens.filter(g => g[0] <= lvl).forEach(g => { P.push(g[1]); P.push(g[1]); });
+  }
+  SPQ.filter(r => r[0] === cat && r[5] <= lvl).forEach(r => P.push(() => ({big: r[2], q: r[1], a: r[3], wrong: r[4].slice(), hint: r[6]})));
+  KSP.filter(r => r[0] === cat).forEach(r => P.push(() => ({big: r[2], q: r[1], a: r[3], wrong: r[4].slice(), hint: r[5]})));
+  if (cat === 'pl') {
+    PLANETS.forEach((pn, i) => {
+      const t = [0, 2, 3, 7].includes(i) ? 1 : 2;
+      if (t <= lvl) P.push(() => ({big: '☀️', q: 'Welcher Planet ist der ' + (i + 1) + '. von der Sonne aus?', a: pn, wrong: pickDistinct(PLANETS, 3, [pn])}));
+      if (lvl >= 2 && i < 7) P.push(() => ({big: '🛰️', q: 'Welcher Planet folgt von der Sonne aus gesehen auf ' + (pn === 'Erde' ? 'die Erde' : pn) + '?', a: PLANETS[i + 1], wrong: pickDistinct(PLANETS, 3, [PLANETS[i + 1], pn])}));
+    });
+    if (lvl >= 2) {
+      const rock = PLANETS.slice(0, 4), giant = PLANETS.slice(4);
+      P.push(() => { const a = rock[Math.floor(Math.random() * 4)]; return {big: '🪨', q: 'Welcher dieser Planeten hat eine feste Oberfläche aus Gestein?', a, wrong: pickDistinct(giant, 3, []), planet: a}; });
+      P.push(() => { const a = giant[Math.floor(Math.random() * 4)]; return {big: '☁️', q: 'Welcher dieser Planeten ist ein Riese aus Gas und Eis?', a, wrong: pickDistinct(rock, 3, []), planet: a}; });
+    }
+  }
+  if (cat === 'rec') RC.filter(r => r[4] <= lvl).forEach(r => P.push(() => ({
+    big: r[1], q: r[0], a: r[2], wrong: r[3].slice()})));
+  return P;
+}
+
+/* ---------- Grammatik für Ländernamen ---------- */
+const FEM = ['Schweiz','Türkei','Slowakei','Ukraine','Mongolei','Elfenbeinküste'];
+const NOMX = {'Vereinigtes Königreich':'das Vereinigte Königreich','Demokratische Republik Kongo':'die Demokratische Republik Kongo',
+  'Vereinigte Arabische Emirate':'die Vereinigten Arabischen Emirate','Niederlande':'die Niederlande','USA':'die USA','Philippinen':'die Philippinen'};
+const DATX = {'Vereinigtes Königreich':'dem Vereinigten Königreich','Demokratische Republik Kongo':'der Demokratischen Republik Kongo',
+  'Vereinigte Arabische Emirate':'den Vereinigten Arabischen Emiraten','Niederlande':'den Niederlanden','USA':'den USA','Philippinen':'den Philippinen'};
+const nom = n => NOMX[n] || (FEM.includes(n) ? 'die ' + n : n);
+const dat = n => DATX[n] || (FEM.includes(n) ? 'der ' + n : n);
+const GENX = {'Vereinigtes Königreich':'des Vereinigten Königreichs','Niederlande':'der Niederlande','USA':'der USA','Philippinen':'der Philippinen'};
+const capOf = n => GENX[n] || (FEM.includes(n) ? 'der ' + n : 'von ' + n);
+const ucf = t => t.charAt(0).toUpperCase() + t.slice(1);
+
+/* ---------- Tipps ---------- */
+function countryHint(name, label) {
+  const n = NB[name];
+  const who = label ? ucf(nom(label)) : 'Das gesuchte Land';
+  if (typeof n === 'string') return label ? name + ': ' + n : n;
+  if (Array.isArray(n) && n.length) {
+    const two = shuffle(n).slice(0, 2);
+    return two.length === 1 ? who + ' grenzt nur an ' + nom(two[0]) + '.' : who + ' liegt zwischen ' + dat(two[0]) + ' und ' + dat(two[1]) + '.';
+  }
+  return null;
+}
+function autoHint(q) {
+  if (q.hint) return q.hint;
+  if (q.emo || q.emoHint) {
+    const visible = [...document.querySelectorAll('#opts .opt')].filter(b => !b.classList.contains('gone')).map(b => b.textContent);
+    const cand = q.wrong.filter(w => visible.includes(w));
+    q.strike = cand[Math.floor(Math.random() * cand.length)];
+    if (q.emo) return 'Diese Flagge ist es schon mal nicht: ' + q.strike;
+    return q.strike + ' ist ein Nachbarland – das ist es also nicht.';
+  }
+  if (q.country) { const h = countryHint(q.country); if (h) return h; }
+  if (q.planet) {
+    const i = PLANETS.indexOf(q.planet);
+    if (i === 0) return 'Der gesuchte Planet ist der Sonne am nächsten.';
+    if (i === 7) return 'Der gesuchte Planet ist am weitesten von der Sonne entfernt.';
+    const d = n => n === 'Erde' ? 'der Erde' : n;
+    return 'Der gesuchte Planet kreist zwischen ' + d(PLANETS[i - 1]) + ' und ' + d(PLANETS[i + 1]) + ' um die Sonne.';
+  }
+  const a = String(q.a);
+  if (/^\d+$/.test(a)) {
+    const nums = q.wrong.filter(w => /^\d+$/.test(w)).map(Number);
+    const w = nums[Math.floor(Math.random() * nums.length)];
+    if (w !== undefined) return 'Die Zahl ist ' + (w < +a ? 'größer als ' : 'kleiner als ') + w + '.';
+  }
+  const letters = a.replace(/[^A-Za-zÄÖÜäöüßÉéíáóúș]/g, '').length;
+  return 'Die Antwort beginnt mit „' + a[0] + '“' + (a.includes(' ') ? '.' : ' und hat ' + letters + ' Buchstaben.');
+}
+
+/* ---------- Spielstand ---------- */
+const LS_KEY = 'weltenbummler:v1';
+let S = {miles: 0, jokers: 1, stamps: {}, days: 0, lastDay: '', answered: 0, correct: 0, kid: {stars: 0, stickers: []}};
+let MODE = 'adult';
+let WORLD = 'erde';
+let lvl = 1;
+try { const raw = localStorage.getItem(LS_KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch (e) {}
+try { const l = parseInt(localStorage.getItem(LS_KEY + ':lvl'), 10); if (l >= 1 && l <= 3) lvl = l; } catch (e) {}
+try { if (localStorage.getItem(LS_KEY + ':mode') === 'kid') MODE = 'kid'; } catch (e) {}
+if (!S.kid) S.kid = {stars: 0, stickers: []};
+
+let dbRef = null, saving = false, pending = false;
+function save() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) {}
+  if (!dbRef) return;
+  if (saving) { pending = true; return; }
+  saving = true;
+  dbRef.set(JSON.parse(JSON.stringify(S))).catch(() => {}).finally(() => {
+    saving = false; if (pending) { pending = false; save(); }
+  });
+}
+function mergeRemote(r) {
+  if (!r) return;
+  const m = Object.assign({}, S);
+  m.miles = Math.max(S.miles || 0, r.miles || 0);
+  m.jokers = (r.miles || 0) > (S.miles || 0) ? (r.jokers ?? S.jokers) : S.jokers;
+  m.answered = Math.max(S.answered || 0, r.answered || 0);
+  m.correct = Math.max(S.correct || 0, r.correct || 0);
+  m.stamps = Object.assign({}, r.stamps || {});
+  Object.keys(S.stamps || {}).forEach(k => {
+    const a = S.stamps[k], b = m.stamps[k];
+    if (!b || (a.best || 0) > (b.best || 0)) m.stamps[k] = a;
+  });
+  const rk = r.kid || {}, lk = S.kid || {};
+  m.kid = {stars: Math.max(lk.stars || 0, rk.stars || 0),
+    stickers: [...new Set([...(lk.stickers || []), ...(rk.stickers || [])])]};
+  if ((r.lastDay || '') > (S.lastDay || '') || (r.days || 0) > (S.days || 0)) { m.days = r.days; m.lastDay = r.lastDay; }
+  S = m;
+}
+(async () => {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [db, user] = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
+    if (!db || !user) return;
+    const uid = await user.id();
+    if (!uid) return;
+    const ref = db.doc('data/users/' + uid + '/progress');
+    const snap = await ref.get();
+    if (snap.exists) mergeRemote(snap.data());
+    dbRef = ref;
+    save();
+    if ($('worldpick').classList.contains('hidden') && ($('home').offsetParent || $('kidhome').offsetParent)) goHome();
+  } catch (e) { /* lokal weiterspielen */ }
+})();
+
+/* ---------- Stempel ---------- */
+function stampSVG(cat, level, stamp, rot) {
+  const c = CATS.find(x => x.id === cat);
+  if (!stamp) {
+    return '<svg viewBox="0 0 100 100" aria-label="Noch kein Stempel"><circle cx="50" cy="50" r="40" fill="none" stroke="var(--line)" stroke-width="3" stroke-dasharray="6 6"/></svg>';
+  }
+  const gold = stamp.best >= 10;
+  const ink = gold ? '#B8860B' : c.ink;
+  const stars = '★'.repeat(level);
+  const r = rot === undefined ? ((cat.charCodeAt(0) + level * 7) % 17) - 8 : rot;
+  return '<svg viewBox="0 0 100 100" role="img" aria-label="Stempel ' + c.name + ' ' + LVL[level] + (gold ? ', gold' : '') + '">' +
+    '<g transform="rotate(' + r + ' 50 50)" opacity=".92">' +
+    '<circle cx="50" cy="50" r="44" fill="' + (gold ? 'rgba(212,167,44,.18)' : 'none') + '" stroke="' + ink + '" stroke-width="4"/>' +
+    '<circle cx="50" cy="50" r="36" fill="none" stroke="' + ink + '" stroke-width="1.5"/>' +
+    '<text x="50" y="47" text-anchor="middle" font-size="24">' + c.icon + '</text>' +
+    '<text x="50" y="66" text-anchor="middle" font-family="Bricolage Grotesque, sans-serif" font-weight="800" font-size="10" fill="' + ink + '">' + (c.short || c.name).toUpperCase().slice(0, 12) + '</text>' +
+    '<text x="50" y="79" text-anchor="middle" font-size="9" fill="' + ink + '">' + stars + '</text>' +
+    '</g></svg>';
+}
+
+/* ---------- Ansichten ---------- */
+function show(id) {
+  ['worldpick', 'home', 'kidhome', 'albumview', 'quiz', 'result', 'passport'].forEach(s => $(s).classList.toggle('hidden', s !== id));
+  window.scrollTo(0, 0);
+}
+function renderHome() {
+  const {r, nx} = rankOf(S.miles);
+  $('rank').textContent = r[1];
+  $('miles').textContent = S.miles.toLocaleString('de-DE');
+  if (nx) {
+    $('bar').style.width = Math.round((S.miles - r[0]) / (nx[0] - r[0]) * 100) + '%';
+    $('next').textContent = 'Noch ' + (nx[0] - S.miles).toLocaleString('de-DE') + ' Meilen bis „' + nx[1] + '"';
+  } else { $('bar').style.width = '100%'; $('next').textContent = 'Höchster Rang erreicht!'; }
+  $('chipJoker').textContent = '🃏 ' + S.jokers + ' Joker';
+  $('chipDays').textContent = '🔥 ' + S.days + (S.days === 1 ? ' Tag' : ' Tage') + ' in Folge';
+  const sp = WORLD === 'all';
+  $('chipStamps').textContent = (sp ? '🎖️ ' : '🛂 ') + wStampCount().length + ' von ' + wc().length * 3 + (sp ? ' Abzeichen' : ' Stempeln');
+  $('brand').textContent = sp ? 'Raumfahrer-Ausweis' : 'Weltenbummler-Pass';
+  $('globe').innerHTML = sp
+    ? '<circle cx="32" cy="32" r="14"/><ellipse cx="32" cy="32" rx="28" ry="8" transform="rotate(-18 32 32)"/>'
+    : '<circle cx="32" cy="32" r="26"/><ellipse cx="32" cy="32" rx="11" ry="26"/><path d="M6 32h52M10 19h44M10 45h44"/>';
+  $('openPass').textContent = sp ? 'Abzeichen ansehen' : 'Reisepass ansehen';
+  $('noteStamp').textContent = sp ? '8 von 10 richtig gibt ein Abzeichen, 10 von 10 ein goldenes.' : '8 von 10 richtig gibt einen Stempel, 10 von 10 einen goldenen.';
+  document.querySelector('#home .label + .seg + .label').textContent = sp ? 'Wähle deine Mission' : 'Wähle deine Reise';
+  document.querySelectorAll('#seg button').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.lvl === lvl)));
+  $('cats').innerHTML = wc().map(c =>
+    '<button class="cat" data-cat="' + c.id + '"><span class="ic">' + c.icon + '</span>' +
+    '<span class="t"><div class="n">' + c.name + '</div><div class="d">' + c.desc + '</div></span>' +
+    '<span class="slot">' + stampSVG(c.id, lvl, S.stamps[c.id + '-' + lvl]) + '</span></button>').join('');
+  document.querySelectorAll('.cat').forEach(b => b.addEventListener('click', () => start(b.dataset.cat)));
+}
+$('seg').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  lvl = +b.dataset.lvl;
+  try { localStorage.setItem(LS_KEY + ':lvl', String(lvl)); } catch (err) {}
+  renderHome();
+});
+
+/* ---------- Kindermodus ---------- */
+function setMode(m) {
+  MODE = m;
+  try { localStorage.setItem(LS_KEY + ':mode', m); } catch (e) {}
+  goHome();
+}
+function goHome() {
+  document.body.classList.toggle('kid', MODE === 'kid');
+  document.body.classList.toggle('space', WORLD === 'all');
+  if (MODE === 'kid') { renderKidHome(); show('kidhome'); } else { renderHome(); show('home'); }
+}
+function renderKidHome() {
+  $('kStars').textContent = '⭐ ' + S.kid.stars;
+  const set = wStickers();
+  $('kStick').textContent = (WORLD === 'all' ? '🚀 ' : '🐾 ') + set.filter(st => S.kid.stickers.includes(st[0])).length + ' von ' + set.length;
+  $('kTitle').textContent = WORLD === 'all' ? 'Weltraumreise für Kinder' : 'Weltreise für Kinder';
+  $('kHi').textContent = WORLD === 'all' ? 'Wähle ein Spiel und sammle Sterne und Weltraum-Sticker!' : 'Wähle ein Spiel und sammle Sterne und Tiersticker!';
+  $('ktiles').innerHTML = wk().map(c =>
+    '<button class="ktile" data-cat="' + c.id + '" style="background:' + c.color + '">' +
+    '<div class="ki">' + c.icon + '</div><div class="kn">' + c.name + '</div><div class="kd">' + c.desc + '</div></button>').join('');
+  document.querySelectorAll('.ktile').forEach(b => b.addEventListener('click', () => start(b.dataset.cat)));
+}
+function renderAlbum() {
+  const cell = st => S.kid.stickers.includes(st[0])
+    ? '<div>' + st[0] + '<small>' + st[1] + '</small></div>'
+    : '<div class="empty" aria-label="Noch nicht gesammelt">?</div>';
+  $('album').innerHTML = '<h3 class="ah">🐾 Tiere der Erde</h3>' + STICKERS.map(cell).join('') +
+    '<h3 class="ah">🚀 Weltraum</h3>' + SPACE_STICKERS.map(cell).join('');
+}
+$('toKid').addEventListener('click', () => setMode('kid'));
+$('toAdult').addEventListener('click', () => setMode('adult'));
+$('openAlbum').addEventListener('click', () => { renderAlbum(); show('albumview'); });
+$('albumBack').addEventListener('click', goHome);
+
+/* ---------- Runde ---------- */
+let G = null;
+function start(cat) {
+  const kid = cat.startsWith('k-');
+  const pool = shuffle(buildPool(cat, lvl));
+  const n = Math.min(kid ? KROUND : ROUND, pool.length);
+  G = {cat, qs: pool.slice(0, n).map(f => f()), i: 0, right: 0, streak: 0, earned: 0, res: [], kid, startMiles: S.miles, kidTips: 3};
+  const t = today();
+  if (!kid && S.lastDay !== t) {
+    const y = new Date(); y.setDate(y.getDate() - 1);
+    const yk = y.getFullYear() + '-' + (y.getMonth() + 1) + '-' + y.getDate();
+    S.days = S.lastDay === yk ? S.days + 1 : 1;
+    S.lastDay = t;
+    save();
+  }
+  show('quiz'); renderQ();
+}
+function renderQ() {
+  const q = G.qs[G.i];
+  q.opts = q.opts || shuffle([q.a].concat(q.wrong.slice(0, G.kid ? 2 : 3)));
+  $('dots').innerHTML = G.qs.map((_, k) => '<span class="' + (k < G.i ? (G.res[k] ? 'ok' : 'no') : k === G.i ? 'cur' : '') + '"></span>').join('');
+  $('tally').textContent = G.kid ? '⭐ ' + G.right : '+' + G.earned;
+  $('big').classList.remove('pop');
+  $('big').textContent = q.big;
+  $('q').textContent = q.q;
+  $('opts').innerHTML = q.opts.map(o => '<button class="opt"></button>').join('');
+  $('opts').classList.toggle('emo', !!q.emo);
+  $('hint').classList.add('hidden'); G.hinted = false;
+  [...$('opts').children].forEach((b, k) => { b.textContent = q.opts[k]; b.onclick = () => answer(b, q.opts[k]); });
+  $('fb').textContent = ''; $('fb').className = 'fb';
+  $('go').classList.add('hidden');
+  $('joker').classList.toggle('hidden', G.kid);
+  $('joker').disabled = S.jokers < 1;
+  $('joker').textContent = '🃏 50:50 (' + S.jokers + ')';
+  document.querySelector('.tbtns').classList.remove('hidden');
+  $('tip').disabled = G.kid && G.kidTips < 1;
+  $('tip').textContent = G.kid ? '💡 Tipp (' + G.kidTips + ')' : '💡 Tipp';
+}
+$('tip').addEventListener('click', () => {
+  const q = G.qs[G.i];
+  if (G.hinted) return;
+  if (G.kid) { if (G.kidTips < 1) return; G.kidTips--; }
+  G.hinted = true;
+  q.hintText = q.hintText || autoHint(q);
+  if (q.strike) [...$('opts').children].forEach(b => { if (b.textContent === q.strike) { b.classList.add('gone'); b.disabled = true; } });
+  $('hint').textContent = '💡 ' + q.hintText;
+  $('hint').classList.remove('hidden');
+  $('tip').disabled = true;
+  if (G.kid) $('tip').textContent = '💡 Tipp (' + G.kidTips + ')';
+});
+$('joker').addEventListener('click', () => {
+  if (S.jokers < 1) return;
+  const q = G.qs[G.i];
+  S.jokers--; save();
+  let removed = 0;
+  [...$('opts').children].forEach(b => { if (removed < 2 && b.textContent !== q.a) { b.classList.add('gone'); b.disabled = true; removed++; } });
+  $('joker').disabled = true;
+  $('joker').textContent = '🃏 50:50 (' + S.jokers + ')';
+});
+function answer(btn, val) {
+  const q = G.qs[G.i];
+  const ok = val === q.a;
+  [...$('opts').children].forEach(b => { b.disabled = true; if (b.textContent === q.a) b.classList.add('ok'); });
+  if (G.kid) {
+    G.res[G.i] = ok;
+    if (ok) {
+      G.right++; S.kid.stars++;
+      $('fb').textContent = PRAISE[Math.floor(Math.random() * PRAISE.length)] + ' +1 ⭐'; $('fb').className = 'fb ok';
+      $('tally').textContent = '⭐ ' + G.right;
+      const big = $('big'); big.classList.remove('pop'); void big.offsetWidth; big.classList.add('pop');
+    } else {
+      btn.classList.add('no');
+      $('fb').textContent = 'Fast! Richtig ist: ' + q.a; $('fb').className = 'fb no';
+    }
+    save();
+    document.querySelector('.tbtns').classList.add('hidden');
+    $('go').textContent = G.i === G.qs.length - 1 ? 'Fertig!' : 'Weiter';
+    $('go').classList.remove('hidden'); $('go').focus();
+    return;
+  }
+  S.answered++;
+  if (ok) {
+    G.right++; G.streak++; S.correct++;
+    let pts = 10 * lvl + (G.streak >= 3 ? 5 : 0);
+    if (G.hinted) pts = Math.ceil(pts / 2);
+    G.earned += pts; S.miles += pts;
+    let txt = 'Richtig! +' + pts;
+    if (G.streak >= 3) txt += ' 🔥' + G.streak;
+    if (G.streak % 5 === 0 && S.jokers < 9) { S.jokers++; txt += ' · Joker verdient!'; }
+    $('fb').textContent = txt; $('fb').className = 'fb ok';
+  } else {
+    G.streak = 0;
+    btn.classList.add('no');
+    $('fb').textContent = 'Leider nicht'; $('fb').className = 'fb no';
+  }
+  G.res[G.i] = ok;
+  save();
+  document.querySelector('.tbtns').classList.add('hidden');
+  $('go').textContent = G.i === G.qs.length - 1 ? 'Ergebnis' : 'Weiter';
+  $('go').classList.remove('hidden');
+  $('go').focus();
+}
+$('go').addEventListener('click', () => {
+  G.i++;
+  if (G.i < G.qs.length) renderQ(); else finish();
+});
+$('quit').addEventListener('click', () => { G = null; goHome(); });
+
+function finishKid() {
+  const n = G.qs.length, c = KCATS.find(x => x.id === G.cat);
+  $('rTitle').textContent = c.icon + ' ' + c.name;
+  $('rScore').textContent = G.right + ' von ' + n + ' ⭐';
+  $('rMiles').textContent = '';
+  $('rRank').innerHTML = '';
+  const box = $('rStamp');
+  box.classList.remove('slam');
+  if (G.right >= Math.min(KNEED, n)) {
+    const left = wStickers().filter(st => !S.kid.stickers.includes(st[0]));
+    if (left.length) {
+      const st = left[Math.floor(Math.random() * left.length)];
+      S.kid.stickers.push(st[0]);
+      box.innerHTML = '<div class="sticker">' + st[0] + '</div><div class="stname">' + st[1] + '</div>';
+      $('rMsg').textContent = 'Juhu! Ein neuer Sticker für dein Album!';
+    } else {
+      S.kid.stars += 5;
+      box.innerHTML = '<div class="sticker">🏆</div>';
+      $('rMsg').textContent = 'Du hast alle Sticker! Dafür gibt es 5 Extra-Sterne.';
+    }
+    const sEl = box.querySelector('.sticker'); void sEl.offsetWidth; sEl.classList.add('slam');
+  } else {
+    const need = Math.min(KNEED, n) - G.right;
+    box.innerHTML = '<div class="sticker" style="opacity:.35">🎁</div>';
+    $('rMsg').textContent = 'Gut gespielt! Noch ' + need + (need === 1 ? ' richtige Antwort' : ' richtige Antworten') + ' mehr, dann gibt es einen Sticker.';
+  }
+  save();
+  show('result');
+}
+function finish() {
+  if (G.kid) return finishKid();
+  const n = G.qs.length, key = G.cat + '-' + lvl;
+  const ratio = G.right / n;
+  const c = CATS.find(x => x.id === G.cat);
+  const had = S.stamps[key];
+  const earnedStamp = ratio >= 0.8;
+  const perfect = G.right === n;
+  let msg;
+  if (earnedStamp) {
+    const best = perfect ? 10 : 8;
+    const improved = !had || (had.best || 0) < best;
+    if (improved) S.stamps[key] = {best, date: today()};
+    if (!had) msg = (WORLD === 'all' ? 'Neues Abzeichen: ' : 'Neuer Stempel für deinen Pass: ') + c.name + ' ' + LVL[lvl] + '!';
+    else if (perfect && had.best < 10) msg = 'Dein Stempel ist jetzt golden – alles richtig!';
+    else msg = perfect ? 'Fehlerfrei! Der goldene Stempel gehört dir schon.' : 'Stark! Den Stempel hast du sicher.';
+  } else {
+    const need = Math.ceil(0.8 * n) - G.right;
+    msg = 'Noch ' + need + (need === 1 ? ' richtige Antwort' : ' richtige Antworten') + ' mehr, dann gibt es ' + (WORLD === 'all' ? 'das Abzeichen.' : 'den Stempel.');
+  }
+  save();
+  $('rTitle').textContent = c.icon + ' ' + c.name + ' · ' + LVL[lvl];
+  $('rScore').textContent = G.right + ' von ' + n;
+  $('rMiles').textContent = '+' + G.earned + ' Meilen';
+  $('rMsg').textContent = msg;
+  const box = $('rStamp');
+  box.classList.remove('slam');
+  box.style.height = '';
+  if (earnedStamp) { box.innerHTML = stampSVG(G.cat, lvl, S.stamps[key], -8); void box.offsetWidth; box.classList.add('slam'); }
+  else box.innerHTML = stampSVG(G.cat, lvl, null);
+  const before = rankOf(G.startMiles).r[1], after = rankOf(S.miles).r[1];
+  $('rRank').innerHTML = before !== after ? '<span class="rankup">Neuer Rang: ' + after + '</span>' : '';
+  show('result');
+}
+$('again').addEventListener('click', () => start(G.cat));
+$('toHome').addEventListener('click', goHome);
+
+/* ---------- Reisepass ---------- */
+function renderPass() {
+  $('passGrid').innerHTML = wc().map(c =>
+    '<div class="prow"><span class="pn">' + c.icon + ' ' + c.name + '</span>' +
+    [1, 2, 3].map(l => stampSVG(c.id, l, S.stamps[c.id + '-' + l])).join('') + '</div>').join('');
+  const keys = wStampCount(), n = keys.length, sp = WORLD === 'all';
+  const golds = keys.filter(k => S.stamps[k].best >= 10).length;
+  $('passTitle').textContent = sp ? 'Deine Abzeichen' : 'Dein Reisepass';
+  const quote = S.answered ? Math.round(S.correct / S.answered * 100) : 0;
+  $('passNote').textContent = n + ' von ' + wc().length * 3 + (sp ? ' Abzeichen' : ' Stempeln') + ', davon ' + golds + ' golden · ' + S.answered + ' Fragen beantwortet, ' + quote + ' % richtig';
+}
+$('openPass').addEventListener('click', () => { renderPass(); show('passport'); });
+$('passBack').addEventListener('click', goHome);
+
+function pickWorld() {
+  document.body.classList.remove('space');
+  document.body.classList.toggle('kid', MODE === 'kid');
+  $('wpTitle').textContent = MODE === 'kid' ? 'Wohin fliegen wir heute?' : 'Wohin geht die Reise?';
+  show('worldpick');
+}
+document.querySelectorAll('.world').forEach(b => b.addEventListener('click', () => { WORLD = b.dataset.world; goHome(); }));
+document.querySelectorAll('.toWorld').forEach(b => b.addEventListener('click', pickWorld));
+pickWorld();
+</script>
+</body>
+</html>

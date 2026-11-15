@@ -1,0 +1,1029 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<script src="sync.js" data-home="ul"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mein Deutschheft – Klasse 2</title>
+<link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --bg:#fdf8ee; --ink:#2b2a33; --soft:#6d6a78; --card:#fff; --line:#ece4d3;
+  --nomen:#e8553f; --verb:#2f7fd8; --adj:#f2a516; --satz:#3aa36b; --mix:#8a5cd6;
+  --ok:#2fa865; --bad:#e04848;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:"Andika",system-ui,sans-serif;font-size:19px;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;font-size:inherit;color:inherit;cursor:pointer}
+.wrap{max-width:760px;margin:0 auto;padding:18px 16px 60px}
+header.top{display:flex;align-items:center;gap:12px;margin-bottom:6px}
+header.top h1{font-size:30px;margin:0;line-height:1.1}
+header.top .sub{color:var(--soft);font-size:16px}
+.totalstars{margin-left:auto;background:#fff;border:2px solid var(--line);border-radius:999px;padding:6px 14px;font-weight:700;white-space:nowrap}
+.section{margin-top:22px}
+.section h2{font-size:21px;margin:0 0 10px;display:flex;align-items:center;gap:8px}
+.section h2 .dot{width:14px;height:14px;border-radius:50%}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.tile{background:var(--card);border:2px solid var(--line);border-radius:18px;padding:14px;text-align:left;display:flex;flex-direction:column;gap:6px;border-left-width:8px;transition:transform .1s}
+.tile:active{transform:scale(.97)}
+.tile b{font-size:19px}
+.tile span{color:var(--soft);font-size:15px}
+.tile .st{font-size:20px;letter-spacing:2px;color:#f2a516}
+.tile .st i{color:#ddd;font-style:normal}
+/* Quiz */
+.bar{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.back{background:#fff;border:2px solid var(--line);border-radius:12px;padding:6px 12px}
+.prog{flex:1;height:14px;background:#eee4cf;border-radius:99px;overflow:hidden}
+.prog div{height:100%;background:var(--accent,var(--satz));width:0;transition:width .3s}
+.count{font-weight:700;min-width:48px;text-align:right}
+.rule{background:#fff;border:2px dashed var(--accent);border-radius:16px;padding:10px 14px;font-size:16px;margin-bottom:14px}
+.rule b{color:var(--accent)}
+.qcard{background:#fff;border:2px solid var(--line);border-radius:22px;padding:22px 18px;text-align:center}
+.qtask{color:var(--soft);font-size:17px;margin-bottom:10px;display:flex;justify-content:center;align-items:center;gap:8px}
+.speak{border:none;background:#f3eee2;border-radius:50%;width:36px;height:36px;font-size:18px}
+.qmain{font-size:30px;font-weight:700;margin:6px 0 18px;line-height:1.35;word-wrap:break-word}
+.qmain .gap{display:inline-block;min-width:90px;border-bottom:3px solid var(--accent);color:var(--accent)}
+.qmain .gap.sm{min-width:34px}
+.qmain.long{font-size:20px;line-height:1.6;text-align:left;background:#fbf8f1;border-radius:14px;padding:12px 16px}
+.sheet .bul{margin:4px 0 4px 30px}
+.sheet .boxes{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
+.sheet .box{border:1.5px solid #333;min-height:80px;padding:6px 8px;font-size:14px}
+.sheet .tk{border:1.5px solid #333;padding:6px 10px;margin-top:10px;font-style:italic}
+.qmain .hl{color:var(--accent);text-decoration:underline;text-decoration-thickness:3px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.opt{background:#fbf8f1;border:3px solid var(--line);border-radius:16px;padding:14px 10px;font-size:22px;font-weight:700;min-height:62px}
+.opt:hover{border-color:var(--accent)}
+.opt{overflow-wrap:anywhere;hyphens:auto}
+.opt.ok{background:#e3f6ea;border-color:var(--ok);color:#1d7a45}
+.opt.bad{background:#fde6e6;border-color:var(--bad);color:#b42828}
+.opt:disabled{cursor:default}
+.fb{margin-top:16px;font-size:20px;font-weight:700;min-height:28px}
+.fb.ok{color:var(--ok)} .fb.bad{color:var(--bad)}
+.fb small{display:block;font-weight:400;color:var(--soft);font-size:16px;margin-top:4px}
+.next{margin-top:14px;background:var(--accent);color:#fff;border:none;border-radius:16px;padding:14px 34px;font-size:21px;font-weight:700;display:none}
+/* Satzende */
+.words{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 4px;font-size:25px;margin:6px 0 18px;line-height:1.6}
+.w{background:none;border:none;padding:2px 4px;border-radius:8px;font-size:25px;position:relative}
+.w:hover{background:#f3eee2}
+.w.end::after{content:" ."; color:var(--accent);font-weight:700}
+.w.fixed{cursor:default}
+.w.miss{background:#fde6e6}
+.w.wrong{background:#fde6e6;text-decoration:line-through}
+.solution{font-size:20px;background:#e3f6ea;border-radius:14px;padding:10px;margin-top:10px;display:none}
+.check{background:var(--accent);color:#fff;border:none;border-radius:16px;padding:12px 28px;font-size:20px;font-weight:700}
+/* End */
+.endcard{text-align:center;background:#fff;border:2px solid var(--line);border-radius:22px;padding:28px 18px}
+.bigstars{font-size:54px;letter-spacing:6px;color:#f2a516;margin:10px 0}
+.bigstars i{color:#ddd;font-style:normal}
+.endbtns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.endbtns button{border-radius:16px;padding:12px 24px;font-size:19px;font-weight:700;border:3px solid var(--accent)}
+.endbtns .p{background:var(--accent);color:#fff}
+.endbtns .s{background:#fff}
+.foot{margin-top:30px;color:var(--soft);font-size:14px;text-align:center}
+/* Kopf-Buttons */
+.topbtns{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.bigbtn{border:none;border-radius:18px;padding:16px 12px;font-size:20px;font-weight:700;color:#fff;display:flex;align-items:center;justify-content:center;gap:8px}
+.bigbtn.ws{background:#4b6cb7}.bigbtn.games{background:#e2843a}
+/* ABC */
+.abcpick{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:10px 0}
+.abcw{background:#fbf8f1;border:3px solid var(--line);border-radius:14px;padding:10px 16px;font-size:24px;font-weight:700}
+.abcw:disabled{opacity:.25}
+.abcrow{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;min-height:58px;border:3px dashed var(--line);border-radius:16px;padding:8px;margin:8px 0}
+.abcrow span{background:var(--accent);color:#fff;border-radius:12px;padding:8px 14px;font-size:22px;font-weight:700}
+.abcrow span.badw{background:var(--bad)}
+.abcrow span.okw{background:var(--ok)}
+.reset{background:#fff;border:2px solid var(--line);border-radius:12px;padding:6px 14px;font-size:16px}
+/* Arbeitsblätter */
+.panel{background:#fff;border:2px solid var(--line);border-radius:20px;padding:16px;margin-bottom:14px}
+.panel h3{margin:0 0 10px;font-size:20px}
+.chk{display:flex;align-items:center;gap:10px;padding:7px 4px;font-size:17px;border-bottom:1px solid #f2ecdf}
+.chk input{width:22px;height:22px;accent-color:#4b6cb7}
+.chk small{color:var(--soft)}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:8px 0;font-size:17px}
+.row select,.row input[type=text]{font-family:inherit;font-size:17px;padding:6px 10px;border-radius:10px;border:2px solid var(--line)}
+.actbtn{background:#4b6cb7;color:#fff;border:none;border-radius:14px;padding:12px 20px;font-size:18px;font-weight:700}
+.actbtn.sec{background:#fff;color:#4b6cb7;border:2px solid #4b6cb7}
+.sheet{background:#fff;border:1px solid #ccc;box-shadow:0 2px 10px rgba(0,0,0,.08);padding:28px 26px;margin-top:14px;font-family:Helvetica,Arial,sans-serif;color:#222;font-size:16px}
+.sheet h4{margin:0;font-size:22px}
+.sheet .nm{display:flex;gap:30px;margin:10px 0 18px;color:#555}
+.sheet .sec{margin:18px 0 6px;font-weight:700;font-size:17px}
+.sheet .ins{color:#555;font-size:14px;margin-bottom:6px}
+.sheet .it{margin:6px 0 10px 4px;line-height:1.6}
+.sheet .op{color:#777;font-size:14px;margin-left:8px}
+.sheet .wl{border-bottom:1px solid #999;height:26px;margin:2px 0}
+.sheet .sol{background:#f4f8ef}
+.msg{padding:10px 14px;border-radius:12px;background:#fff6dd;margin-top:10px;font-size:16px}
+/* Spiele */
+.gamegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
+.gtile{background:#fff;border:2px solid var(--line);border-radius:18px;padding:16px;text-align:center}
+.gtile .em{font-size:46px}
+.gtile b{display:block;font-size:20px;margin:4px 0}
+.gtile small{color:var(--soft);display:block;margin-bottom:8px}
+.coins{font-size:22px;font-weight:700;background:#fff;border:2px solid var(--line);border-radius:999px;padding:6px 16px;display:inline-block}
+.arena{position:relative;background:linear-gradient(#bfe6ff,#e9f7ff);border-radius:20px;height:460px;overflow:hidden;touch-action:manipulation;user-select:none}
+.balloon{position:absolute;font-size:52px;cursor:pointer;transition:transform .1s}
+.hud{display:flex;justify-content:space-between;font-weight:700;font-size:20px;margin:6px 4px}
+.mem{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;max-width:440px;margin:0 auto}
+.card{aspect-ratio:1;border:none;border-radius:14px;background:#e2843a;font-size:40px;color:transparent}
+.card.open{background:#fff;color:inherit;border:3px solid #e2843a}
+.card.done{background:#e3f6ea;color:inherit;border:3px solid var(--ok)}
+.holes{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;max-width:420px;margin:0 auto}
+.hole{aspect-ratio:1;border:none;border-radius:50%;background:radial-gradient(#5a3b22 55%,#8b5e3c 57%);font-size:54px}
+.pop{animation:pop .35s}
+@keyframes pop{0%{transform:scale(.9)}60%{transform:scale(1.04)}100%{transform:scale(1)}}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (max-width:480px){.qmain{font-size:25px}.opt{font-size:18px;padding:12px 6px}header.top h1{font-size:25px}}
+</style>
+<style>body{padding-bottom:var(--cut,0px)}</style>
+<style>/* Nicht die Google-Site mitscrollen */html,body{overscroll-behavior:none}</style>
+<style>body{padding-top:var(--cutT,0px)}</style>
+<script>
+/* Ausgleich für Einbettung (z. B. Google Sites am Handy): nur den wirklich sichtbaren Bereich nutzen */
+(function(){
+  if (window.self === window.top || !('IntersectionObserver' in window)) return;
+  var root = document.documentElement, cb = -1, ct = -1, base = 0, lastH = -1;
+  function apply(b, t){
+    if (b === cb && t === ct) return; cb = b; ct = t;
+    root.style.setProperty('--cut', b + 'px'); root.style.setProperty('--cutT', t + 'px');
+    window.__cut = b; window.__cutT = t;
+    window.dispatchEvent(new Event('resize'));
+  }
+  // Spiele mit verschobener Zeichenfläche: Fingerposition passend umrechnen
+  ['pointerdown','pointermove','pointerup','pointercancel','wheel','click','contextmenu'].forEach(function(n){
+    window.addEventListener(n, function(e){
+      if (window.__shiftCanvasY && window.__cutT && e.target && e.target.tagName === 'CANVAS') {
+        try { Object.defineProperty(e, 'clientY', { value: e.clientY - window.__cutT, configurable: true }); } catch (x) {}
+      }
+    }, { capture: true, passive: true });
+  });
+  function start(){
+    var p = document.createElement('div');
+    p.style.cssText = 'position:fixed;left:0;top:0;width:2px;height:100%;opacity:0;pointer-events:none;z-index:-1';
+    document.body.appendChild(p);
+    var th = []; for (var i = 0; i <= 100; i++) th.push(i / 100);
+    new IntersectionObserver(function(es){
+      var e = es[es.length - 1], r = e.intersectionRect, h = e.boundingClientRect.height;
+      if (r.height <= 0 || h <= 0) return;
+      var max = Math.round(h * 0.6);
+      var b = Math.min(max, Math.max(0, Math.round(h - r.bottom)));
+      var t = Math.min(max, Math.max(0, Math.round(r.top)));
+      // Seite unter einer festen Kopfzeile verschoben? (höchstens 100 px)
+      if (Math.abs(h - lastH) > 2) { lastH = h; base = b; } else if (t === 0 && b > base) base = b;
+      var hidden = Math.min(100, Math.max(0, base - b));
+      apply(b, Math.max(t, hidden > 8 ? hidden : 0));
+    }, { threshold: th }).observe(p);
+  }
+  root.style.setProperty('--cut', '0px'); root.style.setProperty('--cutT', '0px');
+  window.__cut = 0; window.__cutT = 0;
+  if (document.body) start(); else document.addEventListener('DOMContentLoaded', start);
+})();
+</script>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script>
+/* ---------- Hilfsfunktionen ---------- */
+const $ = s => document.querySelector(s);
+const shuffle = a => { a=[...a]; for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} return a; };
+const pick = (a,n) => shuffle(a).slice(0,n);
+const esc = s => String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const store = {
+  get(){ try{ return JSON.parse(localStorage.getItem("sprachheft2")||"{}"); }catch(e){ return {}; } },
+  set(o){ try{ localStorage.setItem("sprachheft2",JSON.stringify(o)); }catch(e){} }
+};
+let memStars = store.get();
+function speak(t){
+  try{
+    const u = new SpeechSynthesisUtterance(t.replace(/_+/g," Lücke "));
+    u.lang="de-DE"; u.rate=.85;
+    speechSynthesis.cancel(); speechSynthesis.speak(u);
+  }catch(e){}
+}
+const ROUND = 8;
+
+/* ---------- Wortlisten ---------- */
+const SORT = {
+  "Menschen":["Lehrerin","Bäcker","Opa","Ärztin","Baby","Ritter","Schwester","Polizist","Mama","Bruder","Pilotin","Feuerwehrmann","Oma","König","Prinzessin","Gärtner"],
+  "Tiere":["Igel","Pferd","Eule","Schnecke","Biene","Löwe","Krokodil","Pinguin","Elefant","Ameise","Wal","Hamster","Zebra","Spinne","Adler","Delfin"],
+  "Pflanzen":["Tulpe","Eiche","Kaktus","Sonnenblume","Tanne","Klee","Löwenzahn","Brennnessel","Rose","Gras","Apfelbaum","Gänseblümchen","Farn","Birke","Efeu","Moos"],
+  "Dinge":["Stuhl","Ball","Brille","Schere","Lampe","Uhr","Rucksack","Kamm","Tasse","Buch","Schlüssel","Fahrrad","Kissen","Gabel","Stift","Teppich"],
+  "Gefühle":["Freude","Angst","Wut","Liebe","Mut","Trauer","Glück","Hoffnung","Ärger","Stolz","Langeweile","Spaß","Neid","Ekel"]
+};
+const NOMEN = ["Hund","Blume","Teller","Schule","Käse","Wolke","Mütze","Fenster","Kuchen","Zug","Nase","Garten","Freude","Angst",
+  "Apfel","Turm","Brille","Zahn","Regen","Wut","Mut","Sofa","Brücke","Lampe","Vogel","Schiff"];
+const VERBEN = ["tanzen","malen","springen","lachen","schwimmen","rennen","kochen","bauen","lesen","klettern","flüstern","werfen",
+  "fliegen","trinken","schreiben","singen","hüpfen","rufen","waschen","helfen","schlafen","graben","fangen","turnen"];
+const ADJ = ["kalt","bunt","leise","lustig","weich","schnell","müde","hell","rund","nass","süß","mutig",
+  "groß","klein","laut","warm","hart","schön","alt","neu","dunkel","schwer","fröhlich","wild"];
+
+const ARTIKEL = {
+  der:["Hund","Baum","Tisch","Mond","Löffel","Apfel","Schuh","Käfer","Topf","Regen","Hut","Zug","Ball","Kuchen","Fisch","Wurm","Stein","Bär","Frosch","Teller","Koffer","Igel","Zaun","Wald","Ring"],
+  die:["Sonne","Katze","Blume","Tasse","Gabel","Maus","Banane","Brücke","Kerze","Hose","Lampe","Tür","Uhr","Schule","Wolke","Ente","Brille","Jacke","Nase","Puppe","Leiter","Schere","Tomate","Gurke","Spinne"],
+  das:["Haus","Buch","Auto","Pferd","Fenster","Brot","Bett","Schaf","Glas","Zelt","Bild","Rad","Ei","Boot","Nest","Kissen","Sofa","Bein","Licht","Schiff","Tor","Kino","Lama","Zebra","Messer"]
+};
+const PLURAL = [
+  ["der Baum","die Bäume","die Baums","die Baumen"],["die Maus","die Mäuse","die Mausen","die Mauser"],
+  ["das Buch","die Bücher","die Buchs","die Buche"],["der Apfel","die Äpfel","die Apfels","die Apfeln"],
+  ["die Katze","die Katzen","die Katzes","die Kätze"],["das Kind","die Kinder","die Kinde","die Kinds"],
+  ["der Hund","die Hunde","die Hünde","die Hunder"],["die Hand","die Hände","die Handen","die Hands"],
+  ["das Auto","die Autos","die Auten","die Autoe"],["der Vogel","die Vögel","die Vogels","die Vogeln"],
+  ["die Nuss","die Nüsse","die Nussen","die Nusse"],["das Haus","die Häuser","die Hause","die Hausen"],
+  ["der Stuhl","die Stühle","die Stuhlen","die Stuhls"],["das Ei","die Eier","die Eis","die Eien"],
+  ["die Blume","die Blumen","die Blumes","die Blüme"],["der Zahn","die Zähne","die Zahnen","die Zahns"],
+  ["der Ball","die Bälle","die Balls","die Baller"],["die Kuh","die Kühe","die Kuhs","die Kuhen"],
+  ["das Bild","die Bilder","die Bilde","die Bilds"],["der Fisch","die Fische","die Fischs","die Fischen"],
+  ["die Banane","die Bananen","die Bananes","die Bänane"],["das Bett","die Betten","die Bette","die Betts"],
+  ["der Hut","die Hüte","die Huts","die Hute"],["die Gans","die Gänse","die Ganse","die Gansen"],
+  ["das Blatt","die Blätter","die Blatts","die Blatte"],["der Zug","die Züge","die Zugs","die Zuge"],
+  ["das Glas","die Gläser","die Glase","die Glasen"],["der Wolf","die Wölfe","die Wolfs","die Wolfen"],
+  ["die Wurst","die Würste","die Wursten","die Wursts"],["das Pferd","die Pferde","die Pferds","die Pferder"],
+  ["der Bär","die Bären","die Bärs","die Bäre"],["die Tasse","die Tassen","die Tasses","die Tässe"],
+  ["das Schaf","die Schafe","die Schafs","die Schafen"],["der Teller","die Teller","die Tellers","die Tellern"],
+  ["die Kerze","die Kerzen","die Kerzes","die Kärze"],["das Rad","die Räder","die Rads","die Rade"],
+  ["der Löffel","die Löffel","die Löffels","die Löffeln"],["die Schule","die Schulen","die Schules","die Schüle"],
+  ["das Boot","die Boote","die Boots","die Böte"],["der Fuchs","die Füchse","die Fuchse","die Fuchsen"],
+  ["die Tür","die Türen","die Türs","die Türer"],["das Zelt","die Zelte","die Zelts","die Zelter"],
+  ["der Frosch","die Frösche","die Froschs","die Froschen"],["die Uhr","die Uhren","die Uhrs","die Uhre"],
+  ["das Nest","die Nester","die Neste","die Nests"],["der Kuchen","die Kuchen","die Kuchens","die Kuchene"],
+  ["die Ente","die Enten","die Entes","die Änte"]
+];
+const COMPOUND = [
+  ["der Schnee","der Mann","Schneemann","der"],["das Haus","die Tür","Haustür","die"],
+  ["der Apfel","der Baum","Apfelbaum","der"],["die Sonne","die Brille","Sonnenbrille","die"],
+  ["der Fuß","der Ball","Fußball","der"],["das Wasser","die Flasche","Wasserflasche","die"],
+  ["der Regen","der Schirm","Regenschirm","der"],["die Schule","die Tasche","Schultasche","die"],
+  ["der Zahn","die Bürste","Zahnbürste","die"],["das Spiel","der Platz","Spielplatz","der"],
+  ["die Blume","der Topf","Blumentopf","der"],["der Vogel","das Nest","Vogelnest","das"],
+  ["die Hand","der Schuh","Handschuh","der"],["der Garten","das Tor","Gartentor","das"],
+  ["das Bild","das Buch","Bilderbuch","das"],["der Schnee","der Ball","Schneeball","der"],
+  ["das Kind","der Garten","Kindergarten","der"],["die Erde","die Beere","Erdbeere","die"],
+  ["der Mond","das Licht","Mondlicht","das"],["die Tomate","die Suppe","Tomatensuppe","die"],
+  ["das Haus","der Schlüssel","Hausschlüssel","der"],["der Winter","die Jacke","Winterjacke","die"],
+  ["der Turm","die Uhr","Turmuhr","die"],["das Pferd","der Stall","Pferdestall","der"],
+  ["die Nacht","das Hemd","Nachthemd","das"],["der Teddy","der Bär","Teddybär","der"],
+  ["das Eis","der Becher","Eisbecher","der"],["die Hand","die Tasche","Handtasche","die"],
+  ["der Regen","der Bogen","Regenbogen","der"],["die Sonne","die Blume","Sonnenblume","die"],
+  ["das Sofa","das Kissen","Sofakissen","das"],["die Tür","die Klingel","Türklingel","die"]
+];
+const MATERIAL = [
+  ["ein Löffel aus Holz","Holzlöffel","Löffelholz"],["ein Becher aus Plastik","Plastikbecher","Becherplastik"],
+  ["ein Ring aus Silber","Silberring","Ringsilber"],["ein Schiff aus Papier","Papierschiff","Schiffpapier"],
+  ["ein Haus aus Stein","Steinhaus","Hausstein"],["ein Ball aus Leder","Lederball","Ballleder"],
+  ["eine Kette aus Gold","Goldkette","Kettengold"],["ein Teller aus Glas","Glasteller","Tellerglas"],
+  ["ein Hut aus Stroh","Strohhut","Hutstroh"],["eine Tasche aus Stoff","Stofftasche","Taschenstoff"],
+  ["eine Brücke aus Stein","Steinbrücke","Brückenstein"],["ein Pferd aus Holz","Holzpferd","Pferdeholz"],
+  ["eine Burg aus Sand","Sandburg","Burgsand"],["ein Tisch aus Glas","Glastisch","Tischglas"],
+  ["ein Kuchen aus Schokolade","Schokoladenkuchen","Kuchenschokolade"],["ein Saft aus Äpfeln","Apfelsaft","Saftapfel"]
+];
+const KONJ = {
+  malen:["male","malst","malt","malen","malt","malen"],
+  lachen:["lache","lachst","lacht","lachen","lacht","lachen"],
+  spielen:["spiele","spielst","spielt","spielen","spielt","spielen"],
+  singen:["singe","singst","singt","singen","singt","singen"],
+  turnen:["turne","turnst","turnt","turnen","turnt","turnen"],
+  rufen:["rufe","rufst","ruft","rufen","ruft","rufen"],
+  kochen:["koche","kochst","kocht","kochen","kocht","kochen"],
+  tanzen:["tanze","tanzt","tanzt","tanzen","tanzt","tanzen"],
+  bauen:["baue","baust","baut","bauen","baut","bauen"],
+  hüpfen:["hüpfe","hüpfst","hüpft","hüpfen","hüpft","hüpfen"],
+  schreiben:["schreibe","schreibst","schreibt","schreiben","schreibt","schreiben"],
+  trinken:["trinke","trinkst","trinkt","trinken","trinkt","trinken"],
+  schwimmen:["schwimme","schwimmst","schwimmt","schwimmen","schwimmt","schwimmen"],
+  sagen:["sage","sagst","sagt","sagen","sagt","sagen"],
+  helfen:["helfe","hilfst","hilft","helfen","helft","helfen"],
+  laufen:["laufe","läufst","läuft","laufen","lauft","laufen"],
+  fangen:["fange","fängst","fängt","fangen","fangt","fangen"],
+  lesen:["lese","liest","liest","lesen","lest","lesen"],
+  fahren:["fahre","fährst","fährt","fahren","fahrt","fahren"],
+  schlafen:["schlafe","schläfst","schläft","schlafen","schlaft","schlafen"],
+  geben:["gebe","gibst","gibt","geben","gebt","geben"],
+  nehmen:["nehme","nimmst","nimmt","nehmen","nehmt","nehmen"],
+  sehen:["sehe","siehst","sieht","sehen","seht","sehen"],
+  essen:["esse","isst","isst","essen","esst","essen"],
+  tragen:["trage","trägst","trägt","tragen","tragt","tragen"],
+  waschen:["wasche","wäschst","wäscht","waschen","wascht","waschen"]
+};
+const WRONGSTEM = {helfen:["helfst"],laufen:["laufst"],fangen:["fangst"],lesen:["lesst"],fahren:["fahrst"],schlafen:["schlafst"],
+  geben:["gebst"],nehmen:["nehmst"],sehen:["sehst"],essen:["essst"],tragen:["tragst"],waschen:["waschst"]};
+const PRON = ["ich","du","er","wir","ihr","sie (viele)"];
+
+const PREFIX = [
+  ["Morgens muss ich früh ___stehen.","auf",["zer","ent","mit"]],
+  ["Ich will den Drachen bunt ___malen.","an",["zer","ent","mit"]],
+  ["Kannst du mir beim Tragen ___helfen?","mit",["ent","zer","an"]],
+  ["Papa will im Supermarkt Milch ___kaufen.","ein",["ent","zer","ab"]],
+  ["Ich glaube, dass das Glas gleich ___bricht.","zer",["an","mit","auf"]],
+  ["Der Dieb will der Polizei ___kommen.","ent",["zer","auf","ab"]],
+  ["Heute will ich meine Oma ___rufen.","an",["ent","zer","mit"]],
+  ["Kannst du mir bitte ___hören?","zu",["ent","zer","ein"]],
+  ["Nach dem Essen muss ich den Tisch ___räumen.","ab",["zer","ent","mit"]],
+  ["Wir wollen im Wald einen Fuchs ___decken.","ent",["zer","an","mit"]],
+  ["Ich muss noch mein Zimmer ___räumen.","auf",["zer","ent","mit"]],
+  ["Darf ich heute lange ___bleiben?","auf",["zer","ent","mit"]],
+  ["Der Zug soll gleich ___fahren.","ab",["zer","ent","mit"]],
+  ["Darf ich bei euch ___spielen?","mit",["zer","ent","ab"]],
+  ["Pass auf, dass du die Tasse nicht ___schlägst.","zer",["an","mit","auf"]],
+  ["Ich will den Brief schnell ___machen.","auf",["zer","ent","mit"]],
+  ["Der Hase will dem Fuchs ___wischen.","ent",["zer","an","auf"]],
+  ["Ich muss das Bild noch ___malen.","aus",["zer","ent","mit"]],
+  ["Lea möchte den Kuchen ___schneiden.","an",["ent","mit","um"]],
+  ["Kannst du mir das Wort ___sagen?","vor",["zer","ent","ab"]]
+];
+const WORTFELD_LUECKE = [
+  ["Das Pferd ___ Hafer.","frisst",["flüstert","rennt","blickt"]],
+  ["Die Maus ___ am Käse.","knabbert",["schaut","ruft","eilt"]],
+  ["Lisa ___ heimlich Schokolade.","nascht",["kichert","schlendert","beobachtet"]],
+  ["Mit dem Fernglas ___ wir die Vögel.","beobachten",["mampfen","flüstern","rasen"]],
+  ["Im Museum ___ wir alte Bilder.","betrachten",["futtern","rufen","flitzen"]],
+  ["Leise ___ Mia ihrer Freundin etwas ins Ohr.","flüstert",["mampft","schlendert","blickt"]],
+  ["Der Trainer ___ laut über den Platz.","brüllt",["knabbert","betrachtet","nascht"]],
+  ["Am Sonntag ___ wir gemütlich durch den Park.","schlendern",["brüllen","naschen","beobachten"]],
+  ["Der Rennwagen ___ über die Strecke.","rast",["flüstert","knabbert","betrachtet"]],
+  ["Ben ___ durch das Schlüsselloch.","späht",["mampft","flitzt","kichert"]],
+  ["Der Hund ___ den Knochen.","frisst",["flüstert","schaut","schlendert"]],
+  ["Die Kinder ___ über den Witz.","kichern",["knabbern","betrachten","rasen"]],
+  ["Das Baby ___ laut nach Mama.","schreit",["mampft","schlendert","späht"]],
+  ["Oma ___ mir eine Geschichte.","erzählt",["nascht","rast","beobachtet"]],
+  ["Der Igel ___ langsam über die Wiese.","trippelt",["brüllt","mampft","betrachtet"]],
+  ["Im Zoo ___ wir die Affen.","beobachten",["kichern","futtern","rasen"]],
+  ["Der Hase ___ an der Karotte.","knabbert",["flüstert","späht","schlendert"]],
+  ["Wir ___ schnell zum Bus.","rennen",["flüstern","knabbern","betrachten"]],
+  ["Der Löwe ___ laut.","brüllt",["nascht","schlendert","betrachtet"]],
+  ["Tom ___ hinter dem Baum hervor.","späht",["mampft","brüllt","knabbert"]]
+];
+const WORTFELD_RAUS = [
+  ["gehen",["schlendern","rennen","eilen","laufen","spazieren","trippeln"],"flüstern"],
+  ["sprechen",["rufen","flüstern","erzählen","sagen","reden","schreien"],"hüpfen"],
+  ["sehen",["schauen","blicken","gucken","betrachten","beobachten","spähen"],"riechen"],
+  ["essen",["futtern","naschen","mampfen","knabbern","schmausen","speisen"],"schwimmen"],
+  ["lachen",["kichern","grinsen","schmunzeln","lächeln","prusten"],"kochen"],
+  ["fahren",["rollen","sausen","rasen","flitzen","düsen"],"schreiben"]
+];
+const WIE = [
+  ["Wie ist die Zitrone?","sauer","süß"],["Wie ist der Igel?","stachelig","glatt"],
+  ["Wie ist die Schnecke?","langsam","schnell"],["Wie ist das Eis?","kalt","heiß"],
+  ["Wie ist die Feder?","leicht","schwer"],["Wie ist der Elefant?","riesig","winzig"],
+  ["Wie ist das Kissen?","weich","hart"],["Wie ist die Nacht?","dunkel","hell"],
+  ["Wie ist die Giraffe?","groß","klein"],["Wie ist der Löwe?","stark","schwach"],
+  ["Wie ist die Wüste?","trocken","nass"],["Wie ist die Maus?","leise","laut"],
+  ["Wie ist der Stein?","hart","weich"],["Wie ist die Sonne?","heiß","kalt"],
+  ["Wie ist der Honig?","süß","sauer"],["Wie ist die Ameise?","winzig","riesig"],
+  ["Wie ist das Schaf?","wollig","stachelig"],["Wie ist der Fuchs?","schlau","dumm"],
+  ["Wie ist der Gepard?","schnell","langsam"],["Wie ist der Turm?","hoch","niedrig"],
+  ["Wie ist der Regen?","nass","trocken"],["Wie ist die Glasscheibe?","glatt","rau"]
+];
+const GEGEN = [["groß","klein"],["hell","dunkel"],["laut","leise"],["schnell","langsam"],["warm","kalt"],["hart","weich"],
+  ["schwer","leicht"],["nass","trocken"],["lang","kurz"],["dick","dünn"],["voll","leer"],["stark","schwach"],
+  ["viel","wenig"],["früh","spät"],["süß","sauer"],["eckig","rund"],["neu","alt"],["fleißig","faul"],
+  ["hoch","niedrig"],["gut","schlecht"],["reich","arm"],["sauber","schmutzig"],["breit","schmal"],["froh","traurig"],
+  ["mutig","ängstlich"],["richtig","falsch"],["gesund","krank"],["wach","müde"],["hungrig","satt"],["glatt","rau"]];
+const SATZENDE = [
+  "am Morgen scheint die Sonne|Tim packt seine Tasche|er läuft zur Schule",
+  "die Katze schläft auf dem Sofa|plötzlich klingelt es|sie springt auf",
+  "wir backen einen Kuchen|Mama holt die Eier|ich rühre den Teig",
+  "Lea hat Geburtstag|sie bekommt ein Fahrrad|sie fährt sofort los",
+  "der Wind weht kräftig|die Blätter fliegen durch die Luft|Ben fängt eins",
+  "im Zoo ist viel los|die Affen turnen herum|ein Löwe gähnt laut",
+  "es ist Winter|der Teich ist zugefroren|wir laufen Schlittschuh",
+  "Opa repariert das Fahrrad|ich reiche ihm die Zange|bald ist es fertig",
+  "heute ist Sportfest|alle Kinder rennen um die Wette|Mia gewinnt eine Medaille",
+  "der Hamster ist weg|wir suchen überall|er sitzt im Schuh",
+  "es regnet stark|ich ziehe meine Gummistiefel an|dann springe ich in jede Pfütze",
+  "Paul hat einen neuen Drachen|er lässt ihn steigen|der Drachen fliegt hoch hinauf",
+  "im Herbst fallen die Blätter|wir sammeln Kastanien|daraus basteln wir Tiere",
+  "Oma kommt zu Besuch|sie bringt einen Kuchen mit|wir trinken zusammen Kakao",
+  "der Bus ist voll|Lena muss stehen|an der Schule steigt sie aus",
+  "am Abend wird es dunkel|der Mond geht auf|die Eule ruft",
+  "Max hat Bauchweh|er bleibt im Bett|Mama kocht ihm Tee",
+  "wir gehen in den Wald|dort sehen wir ein Reh|es läuft schnell weg",
+  "die Ferien beginnen|wir fahren ans Meer|ich baue eine Sandburg",
+  "Emma malt ein Bild|sie nimmt viele Farben|das Bild hängt sie an die Wand"
+];
+const ZEICHEN = [
+  ["Der Hund bellt laut","."],["Im Winter schneit es oft","."],["Meine Schwester spielt Geige","."],["Heute gehen wir ins Schwimmbad","."],["Der Bus kommt gleich","."],
+  ["Wir haben eine Katze","."],["Der Apfel ist rot","."],["Morgen ist Sonntag","."],["Ich lese gern Bücher","."],["Die Vögel singen im Baum","."],["Papa kocht Nudeln","."],
+  ["Wo ist mein Schuh","?"],["Wann beginnt die Pause","?"],["Wer hat meinen Stift","?"],["Wie heißt dein Hamster","?"],["Warum ist der Himmel blau","?"],
+  ["Kommst du mit","?"],["Was isst du gern","?"],["Hast du ein Haustier","?"],["Welche Farbe magst du","?"],["Wo wohnt der Igel","?"],["Spielst du mit mir","?"],
+  ["Pass auf","!"],["Hurra, Ferien","!"],["Komm schnell her","!"],["Au, das tut weh","!"],["Hilfe","!"],
+  ["Halt","!"],["Vorsicht, heiß","!"],["Lauf schneller","!"],["Toll gemacht","!"],["Raus hier","!"]
+];
+const FRAGEWORT = [
+  ["___ wohnst du?","Wo",["Wer","Was","Welche"]],["___ alt bist du?","Wie",["Wo","Wer","Was"]],
+  ["___ Farbe hat die Banane?","Welche",["Wie","Wo","Wann"]],["___ kommt mit auf den Spielplatz?","Wer",["Wie","Wo","Wann"]],
+  ["___ beginnen die Sommerferien?","Wann",["Wer","Was","Welche"]],["___ hast du in deiner Tasche?","Was",["Wer","Wie","Wann"]],
+  ["___ ist der Schnee kalt?","Warum",["Wer","Was","Welcher"]],["___ Tier hat einen Rüssel?","Welches",["Wie","Wo","Wann"]],
+  ["___ heißt du?","Wie",["Wo","Wann","Welche"]],["___ spät ist es?","Wie",["Wo","Wer","Was"]],
+  ["___ hat an die Tür geklopft?","Wer",["Wie","Wo","Wann"]],["___ liegt meine Brille?","Wo",["Wer","Was","Wann"]],
+  ["___ machst du am Wochenende?","Was",["Wer","Wo","Welche"]],["___ Buch liest du gerade?","Welches",["Wie","Wo","Wann"]],
+  ["___ gehst du ins Bett?","Wann",["Wer","Was","Welche"]],["___ weinst du denn?","Warum",["Wer","Welche","Wie"]]
+];
+const ALPHA = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const ABC_BY = {A:["Apfel","Affe","Ameise","Auto"],B:["Ball","Banane","Baum","Bär"],C:["Clown","Computer"],D:["Dose","Drache","Dach","Delfin"],
+  E:["Esel","Eule","Ente","Ei"],F:["Fisch","Fuchs","Frosch","Feder"],G:["Gabel","Giraffe","Gurke","Geschenk"],H:["Hase","Haus","Hund","Hut"],
+  I:["Igel","Insel"],J:["Jacke","Junge","Joghurt"],K:["Katze","Kuh","Krone","Kerze"],L:["Löwe","Lampe","Leiter","Löffel"],
+  M:["Maus","Mond","Mama","Mütze"],N:["Nase","Nest","Nudel","Nuss"],O:["Oma","Opa","Ohr","Obst"],P:["Puppe","Pferd","Pinsel","Pilz"],
+  Q:["Qualle","Quark"],R:["Rose","Rakete","Ring","Rad"],S:["Sonne","Sofa","Schaf","Stern"],T:["Tiger","Tisch","Tasse","Turm"],
+  U:["Uhr","Uhu","Ufo"],V:["Vogel","Vase","Vulkan"],W:["Wolke","Wal","Wurm","Wasser"],X:["Xylofon"],Y:["Yak","Yoga"],Z:["Zebra","Zug","Zelt","Zitrone"]};
+const ABCWORDS = Object.values(ABC_BY).flat();
+function abcDistinct(n){ return pick(Object.keys(ABC_BY),n).map(l=>pick(ABC_BY[l],1)[0]); }
+const ABCGROUPS = [["Ball","Becher","Biene","Blume","Brot","Butter"],["Sand","Seil","Sirene","Sofa","Suppe"],
+  ["Maus","Mehl","Milch","Mond","Muschel"],["Tasse","Teller","Tiger","Tomate","Tulpe"],["Kamm","Kerze","Kino","Koffer","Kuchen"],
+  ["Hase","Hemd","Himmel","Hose","Hund"],["Fahne","Feder","Fisch","Flasche","Frosch","Fuchs"],
+  ["Affe","Ameise","Apfel","Arm","Ast","Auto"],["Dach","Delfin","Dino","Dose","Drache"],["Rad","Regen","Ring","Rose","Rucksack"],
+  ["Nase","Nest","Nilpferd","Note","Nudel"],["Paket","Pferd","Pilz","Pony","Puppe"],["Wal","Wecker","Wind","Wolke","Wurm"],
+  ["Garten","Geld","Giraffe","Gold","Gurke"]];
+const abcSort = a => [...a].sort((x,y)=>x.localeCompare(y,"de"));
+
+const VOKALE = ["a","e","i","o","u"], UMLAUTE = ["ä","ö","ü"], ZWIELAUTE = ["au","ei","eu","äu","ai"];
+const KONSONANTEN = "b c d f g h k l m n p r s t w z".split(" ");
+const VOKAL_LUECKE = [["M___ppe","a"],["B___ll","a"],["F___sch","i"],["S___fa","o"],["K___tze","a"],["W___lke","o"],
+  ["Bl___me","u"],["T___sse","a"],["G___bel","a"],["K___rze","e"],["Z___bra","e"],["L___mpe","a"],["P___nsel","i"],["Z___cker","u"],
+  ["D___se","o"],["Pf___rd","e"],["Fl___sche","a"],["B___cher","e"],["K___nd","i"],["T___ller","e"],["W___lf","o"],["Z___lt","e"],
+  ["F___nster","e"],["W___sser","a"],["T___mate","o"]];
+const VOKAL_ZAEHL = [["Ball",1],["Hund",1],["Fisch",1],["Sonne",2],["Igel",2],["Lampe",2],["Tiger",2],["Banane",3],["Tomate",3],["Elefant",3],["Ananas",3],["Krokodil",3],["Schokolade",4],["Melone",3],["Rakete",3],
+  ["Zelt",1],["Milch",1],["Gabel",2],["Kerze",2],["Hose",2],["Ameise",3],["Gitarre",3],["Kamera",3],["Telefon",3]];
+const UMLAUT_LUECKE = [["B___r","ä"],["K___se","ä"],["V___gel","ö"],["T___r","ü"],["M___tze","ü"],["L___ffel","ö"],["K___nig","ö"],["M___dchen","ä"],["Sch___ssel","ü"],["L___we","ö"],["H___hner","ü"],["B___cker","ä"],
+  ["Gem___se","ü"],["Fl___te","ö"],["B___cher","ü"],["M___hre","ö"],["K___fer","ä"],["Kr___te","ö"],["M___we","ö"],["Br___cke","ü"],["F___ße","ü"],["K___rbis","ü"],["Pf___tze","ü"],["M___hne","ä"],["Kn___pfe","ö"],["H___hle","ö"],["S___ge","ä"],["Z___hne","ä"],["T___rme","ü"]];
+const ZWIE_LUECKE = [["M___s","au"],["Z___n","au"],["H___s","au"],["B___ch","au"],["R___pe","au"],["T___be","au"],["Sch___kel","au"],
+  ["Kl___d","ei"],["St___n","ei"],["Schw___n","ei"],["Kr___de","ei"],["Z___tung","ei"],["G___ge","ei"],
+  ["Kr___z","eu"],["Fr___nd","eu"],["B___tel","eu"],["F___erwehr","eu"],
+  ["B___me","äu"],["Kr___ter","äu"],["H___ser","äu"],["Tr___me","äu"]];
+const LANGKURZ = {
+  lang:["H[a]se","R[o]se","Bl[u]me","N[a]se","H[o]se","[I]gel","[O]fen","Sch[u]le","H[u]t","Br[o]t","Z[u]g","T[a]l","R[a]be","T[u]be","D[o]se","T[i]ger",
+        "T[a]fel","N[u]del","H[o]f","R[a]d","[E]sel","K[i]no","L[a]ma","Sch[a]l","W[a]l","Sch[a]f","S[o]fa","H[o]nig","Kr[o]ne","B[o]den"],
+  kurz:["S[o]nne","B[e]tt","K[a]mm","H[u]nd","B[a]ll","F[i]sch","P[u]ppe","T[a]sse","M[a]nn","W[o]lke","K[i]ste","M[u]nd","K[a]tze","[E]nte","[A]ffe","Sch[i]ff",
+        "P[i]lz","R[i]ng","T[o]pf","K[o]pf","H[a]nd","W[a]nd","[A]st","B[a]nk","St[i]ft","T[a]nte","M[a]ppe","K[o]ffer","T[e]ller","W[a]sser","H[i]mmel","B[u]tter","S[u]ppe","Br[i]lle"]
+};
+// [Lücke, richtig, falsch, ganzes Wort]
+const DOPPEL = [["So___e","nn","n","Sonne"],["Te___er","ll","l","Teller"],["Ka___e","nn","n","Kanne"],
+  ["Ba___","ll","l","Ball"],["Ro___e","s","ss","Rose"],["Ko___er","ff","f","Koffer"],["Bri___e","ll","l","Brille"],
+  ["Na___e","s","ss","Nase"],["Wa___er","ss","s","Wasser"],["Sche___e","r","rr","Schere"],["Bla___","tt","t","Blatt"],
+  ["Ho___e","s","ss","Hose"],["Ta___e","ss","s","Tasse"],["Ma___","nn","n","Mann"],["Bo___en","d","dd","Boden"],
+  ["Pu___e","pp","p","Puppe"],["Ta___el","f","ff","Tafel"],["Ha___er","mm","m","Hammer"],["Bru___en","nn","n","Brunnen"],
+  ["Hi___el","mm","m","Himmel"],["Ti___er","g","gg","Tiger"],["Mu___er","tt","t","Mutter"],
+  ["Bu___er","tt","t","Butter"],["Su___e","pp","p","Suppe"],["Ra___e","b","bb","Rabe"],["Ho___ig","n","nn","Honig"],
+  ["Na___el","d","dd","Nadel"],["Ta___e","nn","n","Tanne"],["Wa___e","nn","n","Wanne"],["Ki___o","n","nn","Kino"],
+  ["Pfa___e","nn","n","Pfanne"],["Mi___ag","tt","t","Mittag"],["Sa___el","tt","t","Sattel"],["Ro___er","ll","l","Roller"],
+  ["Fu___er","tt","t","Futter"],["Ma___e","pp","p","Mappe"],["Pa___ier","p","pp","Papier"],["Spi___e","nn","n","Spinne"],
+  ["Fe___er","d","dd","Feder"],["Schli___en","tt","t","Schlitten"],["Kla___e","ss","s","Klasse"],["Lö___el","ff","f","Löffel"],
+  ["Ki___en","ss","s","Kissen"],["Le___er","d","dd","Leder"],["Gra___","s","ss","Gras"]];
+/* ---------- Einladungen ---------- */
+const EINL_ANLASS = [
+  ["Geburtstagsfeier",["Wir machen eine Schatzsuche","Bitte bring gute Laune mit"]],
+  ["Schwimmbad-Ausflug",["Badesachen mitbringen","Handtuch nicht vergessen"]],
+  ["Kinonachmittag",["Popcorn gibt es bei uns","Kino-Karten bekommt ihr von uns"]],
+  ["Picknick im Park",["Bitte eine Decke mitbringen","Bei Regen fällt es aus"]],
+  ["Laternenumzug",["Laterne mitbringen","Warm anziehen"]],
+  ["Übernachtungsparty",["Schlafsack und Kuscheltier mitbringen","Zahnbürste nicht vergessen"]],
+  ["Faschingsfeier",["Bitte verkleidet kommen","Es gibt Krapfen"]],
+  ["Eislaufen",["Handschuhe und Mütze anziehen","Schlittschuhe kann man ausleihen"]],
+  ["Bastelnachmittag",["Schere und Kleber mitbringen","Alte Kleidung anziehen"]],
+  ["Gartenfest",["Bei Regen feiern wir drinnen","Wasserpistole mitbringen"]],
+  ["Zoo-Ausflug",["Bitte eine Brotzeit mitbringen","Feste Schuhe anziehen"]],
+  ["Plätzchenbacken",["Bitte eine Schürze mitbringen","Jeder darf Plätzchen mitnehmen"]]
+];
+const EINL_M = ["Max","Paul","Ben","Leon","Noah","Elias","Tim","Jonas","Felix","Luis","Anton","Emil"];
+const EINL_W = ["Emma","Mia","Lena","Sophie","Hanna","Lea","Marie","Clara","Ella","Nele","Ida","Greta"];
+const EINL_STR = ["Lindenweg","Rosenstraße","Am Bach","Gartenweg","Schulstraße","Bergstraße","Mühlweg","Sonnenallee","Ahornweg","Birkenstraße","Badstraße","Parkstraße"];
+const WOCHENTAGE = ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"];
+const EINL_KAT = ["Anrede","Anlass","Tag + Datum","Uhrzeit","Adresse","Zusatzinformation"];
+function einlScenario(){
+  const [anlass,zs]=pick(EINL_ANLASS,1)[0];
+  const a=pick([...EINL_M.map(n=>[n,"m"]),...EINL_W.map(n=>[n,"w"])],2);
+  const d=new Date(); d.setDate(d.getDate()+7+Math.floor(Math.random()*60));
+  const datum=`${WOCHENTAGE[d.getDay()]}, den ${d.getDate()}.${d.getMonth()+1}.${d.getFullYear()}`;
+  const start=9+Math.floor(Math.random()*8), dauer=2+Math.floor(Math.random()*2);
+  const anrede=a.map(([n,g],i)=>(g==="w"?"Liebe":"Lieber").replace(/^L/,i?"l":"L")+" "+n).join(", ");
+  return {anlass, zusatz:pick(zs,1)[0], namen:a.map(x=>x[0]).join(", "), anrede, datum,
+    zeit:`${start} Uhr bis ${start+dauer} Uhr`, adresse:`${pick(EINL_STR,1)[0]} ${1+Math.floor(Math.random()*30)}`};
+}
+function einlSol(s){ return [["Anrede",s.anrede],["Anlass",s.anlass],["Tag + Datum",s.datum],["Uhrzeit",s.zeit],["Adresse",s.adresse],["Zusatzinformation",s.zusatz],["Name","dein eigener Name"]]; }
+function einlInfos(s){ return [["Anrede",s.namen],["Anlass",s.anlass],["Tag + Datum",s.datum],["Uhrzeit",s.zeit],["Adresse",s.adresse],["Zusatzinformation",s.zusatz]]; }
+
+/* ---------- Aufgaben-Generatoren ---------- */
+// Jede Frage: {task, main, options, answer, hint?}
+function mc(task, main, answer, wrongs, hint){ return {task, main, answer, options: shuffle([answer, ...wrongs]), hint}; }
+
+const MODULES = [
+ {id:"sort",sec:"nomen",title:"Nomen sortieren",desc:"Mensch, Tier, Pflanze oder Ding?",
+  rule:"<b>Nomen</b> sind Namen für Menschen, Tiere, Pflanzen, Dinge und Gefühle. Viele Nomen kann man sehen und anfassen (Ball). Gefühle kann man nur fühlen (Freude). Nomen schreibe ich groß.",
+  gen(){ const all=[]; for(const k in SORT) SORT[k].forEach(w=>all.push([w,k]));
+    return pick(all,ROUND).map(([w,k])=>({task:"Wohin gehört das Nomen?",main:w,answer:k,options:Object.keys(SORT)})); }},
+ {id:"find",sec:"nomen",title:"Nomen erkennen",desc:"Ist das Wort ein Nomen?",
+  rule:"<b>So prüfst du:</b> Kann ich es sehen, anfassen oder fühlen? Passt ein Artikel davor (der, die, das)? Kann ich es in die Mehrzahl setzen? Dann ist es ein Nomen.",
+  gen(){ const q=[...pick(NOMEN,4).map(w=>[w,"Nomen"]),...pick([...VERBEN,...ADJ],4).map(w=>[w,"kein Nomen"])];
+    return shuffle(q).map(([w,a])=>({task:"Ist das ein Nomen?",main:w.toUpperCase(),answer:a,options:["Nomen","kein Nomen"],
+      hint:a==="Nomen"?`Es heißt: ${artOf(w)} ${w}`:`Es heißt „${w}“ – davor passt kein Artikel.`})); }},
+ {id:"art",sec:"nomen",title:"der, die, das",desc:"Den richtigen Artikel finden",
+  rule:"Jedes Nomen hat einen <b>Artikel</b>: der, die oder das. Auch ein oder eine sind Artikel.",
+  gen(){ const all=[]; for(const a in ARTIKEL) ARTIKEL[a].forEach(w=>all.push([w,a]));
+    return pick(all,ROUND).map(([w,a])=>({task:"Welcher Artikel passt?",main:`___ ${w}`,answer:a,options:["der","die","das"]})); }},
+ {id:"plural",sec:"nomen",title:"Einzahl – Mehrzahl",desc:"Ein Ding – viele Dinge",
+  rule:"Nomen haben eine <b>Einzahl</b> und eine <b>Mehrzahl</b>: der Hund – die Hunde. In der Mehrzahl heißt der Artikel immer „die“.",
+  gen(){ return pick(PLURAL,ROUND).map(([e,r,f1,f2])=>mc("Wie heißt die Mehrzahl?",e,r,[f1,f2])); }},
+ {id:"comp",sec:"nomen",title:"Zusammengesetzte Nomen",desc:"Aus zwei Wörtern wird eins",
+  rule:"Aus zwei Nomen wird ein neues: der Schnee + der Mann = <b>der</b> Schneemann. Der Artikel kommt vom <b>letzten</b> Wort.",
+  gen(){ const a=pick(COMPOUND,5).map(([w1,w2,c,ar])=>({task:"Welcher Artikel passt zum neuen Wort?",main:`${w1} + ${w2}`,answer:`${ar} ${c}`,
+            options:["der","die","das"].map(x=>`${x} ${c}`),hint:`Schau auf das letzte Wort: ${w2}`}));
+    const b=pick(MATERIAL,3).map(([m,r,f])=>mc("Woraus ist es? Wie heißt das Wort?",m,r,[f]));
+    return shuffle([...a,...b]); }},
+
+ {id:"vfind",sec:"verb",title:"Verben finden",desc:"Was tut jemand?",
+  rule:"<b>Verben</b> sagen, was jemand tut. Sie antworten auf die Frage: <b>Was tut jemand?</b>",
+  gen(){ return pick(VERBEN,ROUND).map(v=>mc("Welches Wort ist ein Verb?","Was tut jemand?",v,[...pick(NOMEN,2),...pick(ADJ,1)])); }},
+ {id:"konj",sec:"verb",title:"Verben verändern sich",desc:"ich male, du malst …",
+  rule:"Verben verändern ihre <b>Endung</b>: ich mal<b>e</b>, du mal<b>st</b>, er mal<b>t</b>, wir mal<b>en</b>. Bei manchen Verben ändert sich auch der Wortstamm: du h<b>i</b>lfst.",
+  gen(){ const vs=Object.keys(KONJ); const out=[];
+    for(let i=0;i<ROUND;i++){ const v=vs[Math.floor(Math.random()*vs.length)]; const p=Math.floor(Math.random()*6);
+      const right=KONJ[v][p]; let pool=[...new Set([...KONJ[v],...(WRONGSTEM[v]||[])])].filter(x=>x!==right);
+      out.push({...mc(`Setze das Verb „${v}“ richtig ein.`,`${PRON[p].replace(" (viele)","")} ___`+(p===5?"  (viele)":""),right,pick(pool,3)),extra:`(${v})`}); }
+    return out; }},
+ {id:"pref",sec:"verb",title:"Anfangsbausteine",desc:"an, auf, ab, ent, zer, mit …",
+  rule:"Mit <b>Anfangsbausteinen</b> entstehen neue Verben: malen → <b>an</b>malen, kaufen → <b>ein</b>kaufen.",
+  gen(){ return pick(PREFIX,ROUND).map(([s,r,w])=>mc("Welcher Anfangsbaustein passt?",s,r,w)); }},
+ {id:"feld",sec:"verb",title:"Wortfelder",desc:"Viele Wörter für essen, sehen, gehen …",
+  rule:"Ein <b>Wortfeld</b> sind Wörter mit ähnlicher Bedeutung: schauen, blicken, beobachten gehören zu <b>sehen</b>.",
+  gen(){ const a=pick(WORTFELD_LUECKE,5).map(([s,r,w])=>mc("Welches Verb passt?",s,r,w));
+    const b=pick(WORTFELD_RAUS,3).map(([f,ws,odd])=>mc(`Welches Wort passt nicht zum Wortfeld „${f}“?`,`Wortfeld: ${f}`,odd,pick(ws,3)));
+    return shuffle([...a,...b]); }},
+
+ {id:"wie",sec:"adj",title:"Wie ist es?",desc:"Adjektive beschreiben",
+  rule:"<b>Adjektive</b> sagen, wie etwas ist. Sie antworten auf die Frage: <b>Wie ist etwas?</b>",
+  gen(){ return pick(WIE,ROUND).map(([q,r,f])=>mc("Welches Adjektiv passt?",q,r,[f])); }},
+ {id:"gegen",sec:"adj",title:"Gegenteile",desc:"groß – klein, hell – dunkel",
+  rule:"Zu vielen Adjektiven gibt es ein <b>Gegenteil</b>: alt – neu, laut – leise.",
+  gen(){ return pick(GEGEN,ROUND).map(([a,b])=>{ const flip=Math.random()<.5; const [q,r]=flip?[b,a]:[a,b];
+    const others=GEGEN.flat().filter(x=>x!==q&&x!==r); return mc("Finde das Gegenteil.",`${q} – ___`,r,pick(others,3)); }); }},
+
+ {id:"ende",sec:"satz",title:"Satzende finden",desc:"Wo hört ein Satz auf?",special:"ende",
+  rule:"Jeder Satz fängt <b>groß</b> an und hört mit einem <b>Satzzeichen</b> auf. Tippe auf das letzte Wort jedes Satzes.",
+  gen(){ return pick(SATZENDE,5).map(t=>({type:"ende",text:t})); }},
+ {id:"zeichen",sec:"satz",title:"Punkt, Frage, Ausruf",desc:". oder ? oder !",
+  rule:"Aussagesatz → <b>.</b> &nbsp; Fragesatz → <b>?</b> &nbsp; Ausruf → <b>!</b>",
+  gen(){ return pick(ZEICHEN,ROUND).map(([s,z])=>({task:"Welches Satzzeichen fehlt?",main:`${s} ___`,answer:z,options:[".","?","!"]})); }},
+ {id:"frage",sec:"satz",title:"Fragewörter",desc:"Wer? Wo? Wann? Warum?",
+  rule:"<b>Fragewörter</b> stehen am Anfang einer Frage: Wer? Was? Wo? Wann? Wie? Warum? Welche?",
+  gen(){ return pick(FRAGEWORT,ROUND).map(([s,r,w])=>mc("Welches Fragewort passt?",s,r,w)); }},
+
+ {id:"abcbuch",sec:"abc",title:"Das ABC",desc:"Welcher Buchstabe kommt davor oder danach?",
+  rule:"Das <b>ABC</b> hat 26 Buchstaben: A B C D E F G H I J K L M N O P Q R S T U V W X Y Z",
+  gen(){ const out=[]; for(let i=0;i<ROUND;i++){ const t=Math.floor(Math.random()*3); const k=1+Math.floor(Math.random()*24);
+      const others=n=>pick(ALPHA.filter(x=>x!==ALPHA[n]),3);
+      if(t===0) out.push(mc("Welcher Buchstabe kommt danach?",`${ALPHA[k]} – ___`,ALPHA[k+1],others(k+1)));
+      else if(t===1) out.push(mc("Welcher Buchstabe kommt davor?",`___ – ${ALPHA[k]}`,ALPHA[k-1],others(k-1)));
+      else out.push(mc("Welcher Buchstabe fehlt?",`${ALPHA[k-1]}  ___  ${ALPHA[k+1]}`,ALPHA[k],others(k))); }
+    return out; }},
+ {id:"abcbu",sec:"abc",title:"Buchstaben ordnen",desc:"Bring die Buchstaben in die ABC-Reihe",special:"abc",
+  rule:"Sag das ABC leise auf. Welcher Buchstabe kommt zuerst? Tippe die Buchstaben der Reihe nach an.",
+  gen(){ const out=[]; for(let i=0;i<6;i++){ const n=i<2?4:5; const start=Math.floor(Math.random()*(26-8));
+      out.push({type:"abc",words:pick(ALPHA.slice(start,start+8),n)}); } return out; }},
+ {id:"abcfirst",sec:"abc",title:"Wer kommt zuerst?",desc:"Welches Wort steht im ABC vorne?",
+  rule:"Vergleiche den <b>ersten Buchstaben</b>. Ist er gleich, schau auf den <b>zweiten</b>.",
+  gen(){ const out=[]; for(let i=0;i<ROUND;i++){ let pair;
+      if(i<4) pair=pick(ABCWORDS,2); else pair=pick(ABCGROUPS[Math.floor(Math.random()*ABCGROUPS.length)],2);
+      const first=abcSort(pair)[0]; out.push({task:"Welches Wort kommt im ABC zuerst?",main:pair.join("  oder  "),answer:first,options:pair}); }
+    return out; }},
+ {id:"abc1",sec:"abc",title:"Nach dem ABC ordnen",desc:"Schau auf den ersten Buchstaben",special:"abc",
+  rule:"Ordne nach dem <b>ersten Buchstaben</b>. Welcher kommt im ABC zuerst? Tippe die Wörter der Reihe nach an.",
+  gen(){ const out=[]; for(let i=0;i<6;i++) out.push({type:"abc",words:abcDistinct(i<3?3:4)}); return out; }},
+ {id:"abc2",sec:"abc",title:"ABC-Profi",desc:"Gleicher Anfang? Dann der 2. Buchstabe!",special:"abc",
+  rule:"Haben die Wörter den <b>gleichen ersten Buchstaben</b>, schaust du auf den <b>zweiten</b>: B<b>a</b>ll, B<b>i</b>ene, B<b>r</b>ot.",
+  gen(){ return pick(ABCGROUPS,6).map(g=>({type:"abc",words:pick(g,4)})); }},
+
+ {id:"vokal",sec:"laute",title:"Vokale und Konsonanten",desc:"a, e, i, o, u – unsere Vokale",
+  rule:"Unsere <b>Vokale</b> (Selbstlaute) sind: <b>a, e, i, o, u</b>. Alle anderen Buchstaben sind <b>Konsonanten</b> (Mitlaute). In jeder Silbe steckt ein Vokal.",
+  gen(){ const out=[];
+    pick(VOKAL_LUECKE,3).forEach(([w,v])=>out.push({...mc("Welcher Vokal fehlt?",w,v,pick(VOKALE.filter(x=>x!==v),3)),small:true}));
+    for(let i=0;i<2;i++){ const v=pick(VOKALE,1)[0]; out.push(mc("Welcher Buchstabe ist ein Vokal?","Finde den Vokal!",v,pick(KONSONANTEN,3))); }
+    { const k=pick(KONSONANTEN,1)[0]; out.push(mc("Welcher Buchstabe ist kein Vokal?","Finde den Konsonanten!",k,pick(VOKALE,3))); }
+    pick(VOKAL_ZAEHL,2).forEach(([w,n])=>out.push({task:"Wie viele Vokale hat das Wort?",main:w,answer:String(n),options:["1","2","3","4"],
+      hint:`${w}: ${[...w.toLowerCase()].filter(c=>VOKALE.includes(c)).join(", ")}`}));
+    return shuffle(out); }},
+ {id:"umlaut",sec:"laute",title:"Umlaute und Zwielaute",desc:"ä, ö, ü – au, ei, eu, äu",
+  rule:"<b>Umlaute:</b> ä, ö, ü. &nbsp; <b>Zwielaute</b> (zwei Vokale, ein Laut): <b>au, ei, eu, äu</b> (selten ai).",
+  gen(){ const out=[];
+    pick(UMLAUT_LUECKE,3).forEach(([w,u])=>out.push({...mc("Welcher Umlaut fehlt?",w,u,UMLAUTE.filter(x=>x!==u)),small:true}));
+    pick(ZWIE_LUECKE,3).forEach(d=>{ const w=d[0], ans=d[1], base=d[2]||d[1];
+      const opts=["au","ei","eu","äu"].filter(x=>x!==base).map(x=>ans===ans.toLowerCase()?x:x.charAt(0).toUpperCase()+x.slice(1));
+      out.push({...mc("Welcher Zwielaut fehlt?",w,ans,opts),small:true}); });
+    const all=[...VOKALE.map(x=>[x,"Vokal"]),...UMLAUTE.map(x=>[x,"Umlaut"]),...ZWIELAUTE.map(x=>[x,"Zwielaut"]),...pick(KONSONANTEN,4).map(x=>[x,"Konsonant"])];
+    pick(all,2).forEach(([x,a])=>out.push({task:"Was ist das?",main:`„${x}“`,answer:a,options:["Vokal","Umlaut","Zwielaut","Konsonant"]}));
+    return shuffle(out); }},
+ {id:"lang",sec:"laute",title:"Lange und kurze Vokale",desc:"Hase oder Sonne – hör genau hin!",
+  rule:"Sprich das Wort langsam. Ein <b>langer</b> Vokal wird gedehnt: H<b>aa</b>se. Ein <b>kurzer</b> Vokal ist schnell vorbei: S<b>o</b>nne.",
+  gen(){ const all=[...LANGKURZ.lang.map(w=>[w,"lang"]),...LANGKURZ.kurz.map(w=>[w,"kurz"])];
+    return pick(all,ROUND).map(([w,a])=>({task:"Ist der markierte Vokal lang oder kurz?",main:w,answer:a,options:["lang","kurz"],
+      hint:a==="kurz"?"Nach einem kurzen Vokal folgen meist zwei Konsonanten.":"Nach einem langen Vokal folgt meist nur ein Konsonant."})); }},
+ {id:"doppel",sec:"laute",title:"Ein oder zwei Mitlaute?",desc:"Sonne mit nn, Hase mit s",
+  rule:"Nach einem <b>kurzen</b> Vokal folgen meist <b>zwei</b> Konsonanten: So<b>nn</b>e, Ba<b>ll</b>, Ka<b>tz</b>e. Nach einem <b>langen</b> Vokal folgt meist nur <b>einer</b>: Ha<b>s</b>e.",
+  gen(){ return pick(DOPPEL,ROUND).map(([g,r,f,w])=>({...mc("Ein oder zwei Mitlaute?",g,r,[f]),small:true,
+      hint:`Es heißt ${w}. Der Vokal ist ${r.length>1?"kurz – also zwei Mitlaute":"lang – also nur ein Mitlaut"}.`})); }},
+
+ {id:"einl",sec:"schreib",title:"Eine Einladung schreiben",desc:"Anrede, Anlass, Datum, Uhrzeit …",
+  rule:"Eine <b>Einladung</b> braucht: Anrede (Liebe …, lieber …), Anlass, Tag + Datum, Uhrzeit, Adresse, Zusatzinformation und am Ende deinen Namen.",
+  gen(){ const out=[]; const s1=einlScenario(), s2=einlScenario();
+    pick([...einlInfos(s1),...einlInfos(s2)],4).forEach(([k,v])=>out.push({task:"Wohin gehört diese Information?",main:v,answer:k,options:EINL_KAT}));
+    for(let i=0;i<2;i++){ const g=Math.random()<.5; const n=pick(g?EINL_W:EINL_M,1)[0];
+      out.push({...mc("Liebe oder Lieber?",`___ ${n},`,g?"Liebe":"Lieber",[g?"Lieber":"Liebe"]),hint:`${n} ist ${g?"ein Mädchen – also Liebe":"ein Junge – also Lieber"}.`}); }
+    for(let i=0;i<2;i++){ const sc=einlScenario(); const inf=einlInfos(sc); const miss=pick(inf.slice(1),1)[0][0];
+      const lines=[sc.anrede+","].concat(inf.slice(1).filter(x=>x[0]!==miss).map(x=>x[1])).concat([(()=>{ const nm=pick(EINL_W.filter(n=>!sc.namen.includes(n)),1)[0]; return "Deine "+nm; })()]);
+      out.push({...mc("In dieser Einladung fehlt etwas. Was fehlt?",lines.join("\n"),miss,pick(EINL_KAT.filter(x=>x!==miss&&x!=="Anrede"),3)),long:true}); }
+    return shuffle(out); }},
+
+ {id:"wortart",sec:"mix",title:"Wortarten bestimmen",desc:"Nomen, Verb oder Adjektiv?",
+  rule:"<b>Nomen</b>: Wer oder was? &nbsp; <b>Verb</b>: Was tut jemand? &nbsp; <b>Adjektiv</b>: Wie ist etwas?",
+  gen(){ const all=[...NOMEN.map(w=>[w,"Nomen"]),...VERBEN.map(w=>[w,"Verb"]),...ADJ.map(w=>[w,"Adjektiv"])];
+    return pick(all,ROUND).map(([w,a])=>({task:"Welche Wortart ist das?",main:w.toUpperCase(),answer:a,options:["Nomen","Verb","Adjektiv"]})); }},
+ {id:"test",sec:"mix",title:"Üben und Können",desc:"Ein bunter Mix aus allem",
+  rule:"Hier kommt alles durcheinander. Zeig, was du kannst!",
+  gen(){ const src=MODULES.filter(m=>!["test","ende"].includes(m.id)); const out=[];
+    for(let i=0;i<10;i++){ const m=src[Math.floor(Math.random()*src.length)]; out.push(m.gen()[0]); } return out; }}
+];
+const SECS = {nomen:["Nomen","var(--nomen)"],verb:["Verben","var(--verb)"],adj:["Adjektive","var(--adj)"],satz:["Sätze","var(--satz)"],abc:["ABC","#14a3a3"],schreib:["Schreiben","#7a8b2f"],laute:["Laute: Vokale, Umlaute, Zwielaute","#d94f8a"],mix:["Üben und Können","var(--mix)"]};
+function artOf(w){ for(const a in ARTIKEL) if(ARTIKEL[a].includes(w)) return a;
+  const map={Hund:"der",Blume:"die",Teller:"der",Schule:"die","Käse":"der",Wolke:"die","Mütze":"die",Fenster:"das",Kuchen:"der",Zug:"der",Nase:"die",Garten:"der",Freude:"die",Angst:"die",Turm:"der",Zahn:"der",Wut:"die",Mut:"der",Vogel:"der"}; return map[w]||""; }
+
+/* ---------- Startseite ---------- */
+function starsHtml(n){ return "★".repeat(n)+"<i>"+"★".repeat(3-n)+"</i>"; }
+function home(){
+  stopGame();
+  const total = Object.values(memStars).reduce((a,b)=>a+b,0);
+  let h = `<header class="top"><div style="font-size:44px">📒</div><div><h1>Mein Deutschheft</h1><div class="sub">Deutsch üben – Klasse 2</div></div>
+    <div class="totalstars">⭐ ${total} / ${MODULES.length*3}</div></header>
+    <div class="topbtns"><button class="bigbtn ws" onclick="wsScreen()">📝 Arbeitsblätter</button>
+    <button class="bigbtn games" onclick="gamesScreen()">🎮 Spiele · 🪙 ${getCoins()}</button></div>`;
+  for(const s in SECS){
+    h += `<div class="section"><h2><span class="dot" style="background:${SECS[s][1]}"></span>${SECS[s][0]}</h2><div class="grid">`;
+    MODULES.filter(m=>m.sec===s).forEach(m=>{
+      h += `<button class="tile" style="border-left-color:${SECS[s][1]}" onclick="start('${m.id}')">
+        <b>${m.title}</b><span>${m.desc}</span><div class="st">${starsHtml(memStars[m.id]||0)}</div></button>`;
+    });
+    h += `</div></div>`;
+  }
+  h += `<div class="foot">Eigene Übungen zu den Themen des Arbeitshefts (Klasse 2). Sterne werden auf diesem Gerät gespeichert.</div>`;
+  $("#app").innerHTML = h; window.scrollTo(0,0);
+}
+
+/* ---------- Quiz ---------- */
+let S = null;
+function start(id){
+  const m = MODULES.find(x=>x.id===id);
+  S = {m, qs:m.gen(), i:0, right:0};
+  document.documentElement.style.setProperty("--accent", SECS[m.sec][1]);
+  show();
+}
+function shell(inner){
+  const n=S.qs.length;
+  $("#app").innerHTML = `<div class="bar"><button class="back" onclick="home()">← Zurück</button>
+    <div class="prog"><div style="width:${S.i/n*100}%"></div></div><div class="count">${Math.min(S.i+1,n)}/${n}</div></div>
+    <div class="rule">${S.m.rule}</div>${inner}`;
+}
+function show(){
+  if(S.i>=S.qs.length) return finish();
+  const q=S.qs[S.i];
+  if(q.type==="ende") return showEnde(q);
+  if(q.type==="abc") return showAbc(q);
+  const mainHtml = esc(q.main).replace("___",`<span class="gap${q.small?' sm':''}" id="gap">&nbsp;</span>`).replace(/\[(.+?)\]/g,'<span class="hl">$1</span>');
+  shell(`<div class="qcard pop"><div class="qtask">${esc(q.task)} <button class="speak" title="Vorlesen" onclick="speak(${esc(JSON.stringify(q.task+'. '+q.main.replace(/[\[\]]/g,'')))})">🔊</button></div>
+    <div class="qmain${q.long?" long":""}">${q.long?mainHtml.replace(/\n/g,"<br>"):mainHtml}</div>
+    <div class="opts">${q.options.map((o,k)=>`<button class="opt" data-k="${k}">${esc(o)}</button>`).join("")}</div>
+    <div class="fb" id="fb"></div><button class="next" id="next" onclick="S.i++;show()">Weiter →</button></div>`);
+  document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>answer(b,q));
+}
+function answer(btn,q){
+  const val=q.options[+btn.dataset.k], ok=val===q.answer;
+  document.querySelectorAll(".opt").forEach(b=>{ b.disabled=true; if(q.options[+b.dataset.k]===q.answer) b.classList.add("ok"); });
+  const gap=$("#gap"); if(gap){ gap.textContent=q.answer; }
+  const fb=$("#fb");
+  if(ok){ S.right++; fb.className="fb ok"; fb.innerHTML=pick(["Super! 🎉","Richtig! ⭐","Klasse! 👍","Toll gemacht! 🌟"],1)[0]; }
+  else { btn.classList.add("bad"); $(".qcard").classList.add("shake"); fb.className="fb bad";
+    fb.innerHTML=`Nicht ganz. Richtig ist: ${esc(q.answer)}`+(q.hint?`<small>${esc(q.hint)}</small>`:""); }
+  if(ok && q.hint && S.m.id==="find") fb.innerHTML+=`<small>${esc(q.hint)}</small>`;
+  $("#next").style.display="inline-block"; $("#next").focus();
+}
+
+/* Satzende */
+function showEnde(q){
+  const sents=q.text.split("|"); const words=[]; const ends=new Set();
+  sents.forEach(s=>{ s.split(" ").forEach(w=>words.push(w)); ends.add(words.length-1); });
+  q._words=words; q._ends=ends; q._sel=new Set([words.length-1]);
+  shell(`<div class="qcard pop"><div class="qtask">Tippe auf das letzte Wort von jedem Satz. Dort kommt ein Punkt hin.
+     <button class="speak" onclick="speak(${esc(JSON.stringify(words.join(' ')))})">🔊</button></div>
+    <div class="words">${words.map((w,k)=>`<button class="w${k===words.length-1?' end fixed':''}" data-k="${k}">${esc(w)}</button>`).join("")}</div>
+    <button class="check" id="chk">Prüfen</button>
+    <div class="fb" id="fb"></div>
+    <div class="solution" id="sol">${sents.map(s=>esc(s.charAt(0).toUpperCase()+s.slice(1))+".").join(" ")}</div>
+    <button class="next" id="next" onclick="S.i++;show()">Weiter →</button></div>`);
+  document.querySelectorAll(".w").forEach(b=>{ const k=+b.dataset.k; if(k===words.length-1) return;
+    b.onclick=()=>{ if(q._done) return; q._sel.has(k)?q._sel.delete(k):q._sel.add(k); b.classList.toggle("end"); }; });
+  $("#chk").onclick=()=>{
+    q._done=true; $("#chk").style.display="none";
+    let ok=q._sel.size===ends.size && [...ends].every(e=>q._sel.has(e));
+    document.querySelectorAll(".w").forEach(b=>{ const k=+b.dataset.k;
+      if(ends.has(k)&&!q._sel.has(k)) b.classList.add("miss","end");
+      if(!ends.has(k)&&q._sel.has(k)) b.classList.add("wrong"); });
+    const fb=$("#fb");
+    if(ok){ S.right++; fb.className="fb ok"; fb.textContent="Super, alle Satzenden gefunden! 🎉"; }
+    else { fb.className="fb bad"; fb.textContent="Nicht ganz. So ist es richtig:"; $(".qcard").classList.add("shake"); }
+    $("#sol").style.display="block"; $("#next").style.display="inline-block";
+  };
+}
+
+/* Ende */
+function finish(){
+  const n=S.qs.length, r=S.right, ratio=r/n;
+  const st = ratio>=.95?3: ratio>=.7?2: ratio>=.4?1:0;
+  if(st>(memStars[S.m.id]||0)){ memStars[S.m.id]=st; store.set(memStars); }
+  const earned = st + (st===3?1:0); if(earned) setCoins(getCoins()+earned);
+  const msg = st===3?"Fantastisch! Alles gewusst! 🏆": st===2?"Sehr gut gemacht! 💪": st===1?"Gut! Übe noch ein bisschen. 🙂":"Weiter üben – du schaffst das! 🌱";
+  $("#app").innerHTML = `<div class="endcard pop"><div style="font-size:24px;font-weight:700">${esc(S.m.title)}</div>
+    <div class="bigstars">${starsHtml(st)}</div>
+    <div style="font-size:22px">${r} von ${n} richtig</div><p style="font-size:20px">${msg}</p>
+    ${earned?`<div class="coins pop">+${earned} 🪙 für die Spiele!</div>`:""}
+    <div class="endbtns"><button class="p" onclick="start('${S.m.id}')">Nochmal üben</button><button class="s" onclick="home()">Zur Übersicht</button></div></div>`;
+}
+
+/* ---------- ABC ordnen ---------- */
+function showAbc(q){
+  const sol=abcSort(q.words); q._sel=[];
+  shell(`<div class="qcard pop"><div class="qtask">Tippe die Wörter nach dem ABC an.
+      <button class="speak" onclick="speak(${esc(JSON.stringify(q.words.join(', ')))})">🔊</button></div>
+    <div class="abcpick">${q.words.map((w,k)=>`<button class="abcw" data-k="${k}">${esc(w)}</button>`).join("")}</div>
+    <div class="abcrow" id="row"></div>
+    <button class="reset" id="rst">↺ Nochmal von vorne</button>
+    <div class="fb" id="fb"></div>
+    <button class="next" id="next" onclick="S.i++;show()">Weiter →</button></div>`);
+  const draw=()=>{ $("#row").innerHTML=q._sel.map(k=>`<span>${esc(q.words[k])}</span>`).join(""); };
+  document.querySelectorAll(".abcw").forEach(b=>b.onclick=()=>{
+    if(q._done) return; const k=+b.dataset.k; q._sel.push(k); b.disabled=true; draw();
+    if(q._sel.length===q.words.length){
+      q._done=true; $("#rst").style.display="none";
+      const got=q._sel.map(k=>q.words[k]); const ok=got.every((w,i)=>w===sol[i]);
+      $("#row").innerHTML=got.map((w,i)=>`<span class="${w===sol[i]?'okw':'badw'}">${esc(w)}</span>`).join("");
+      const fb=$("#fb");
+      if(ok){ S.right++; fb.className="fb ok"; fb.textContent="Super, genau richtig sortiert! 🎉"; }
+      else { fb.className="fb bad"; fb.innerHTML=`Nicht ganz. Richtig ist:<small>${sol.map(esc).join(" · ")}</small>`; $(".qcard").classList.add("shake"); }
+      $("#next").style.display="inline-block";
+    }
+  });
+  $("#rst").onclick=()=>{ q._sel=[]; draw(); document.querySelectorAll(".abcw").forEach(b=>b.disabled=false); };
+}
+
+/* ---------- Münzen ---------- */
+function getCoins(){ try{ return +(localStorage.getItem("sprachheft2_coins")||0); }catch(e){ return memCoins; } }
+let memCoins=0;
+function setCoins(n){ memCoins=n; try{ localStorage.setItem("sprachheft2_coins",String(n)); }catch(e){} }
+
+/* ---------- Arbeitsblätter ---------- */
+const WSI = {
+  sort:"Mensch, Tier, Pflanze oder Ding? Kreise ein.", find:"Ist das ein Nomen? Kreise ein.",
+  art:"Schreibe den richtigen Artikel auf die Linie.", plural:"Kreise die richtige Mehrzahl ein.",
+  comp:"Kreise das richtige Wort ein.", vfind:"Kreise in jeder Zeile das Verb ein.",
+  konj:"Setze das Verb in der richtigen Form ein.", pref:"Setze den passenden Anfangsbaustein ein.",
+  feld:"Wähle das passende Wort aus.", wie:"Kreise das passende Adjektiv ein.",
+  gegen:"Schreibe das Gegenteil auf die Linie.", ende:"Wo endet ein Satz? Schreibe die Sätze richtig ab.",
+  zeichen:"Setze das richtige Satzzeichen ein: Punkt, Fragezeichen oder Ausrufezeichen.",
+  frage:"Setze das passende Fragewort ein.", abcbuch:"Schreibe den richtigen Buchstaben auf die Linie.",
+  abc1:"Ordne die Wörter nach dem ABC.", abcfirst:"Welches Wort kommt im ABC zuerst? Kreise ein.", abcbu:"Ordne die Buchstaben nach dem ABC.",
+  vokal:"Löse die Aufgaben zu Vokalen und Konsonanten.", umlaut:"Setze den richtigen Umlaut oder Zwielaut ein.", lang:"Ist der unterstrichene Vokal lang oder kurz? Kreise ein.", doppel:"Ein oder zwei Mitlaute? Setze richtig ein.", abc2:"Ordne die Wörter nach dem ABC. Achte auf den 2. Buchstaben.",
+  wortart:"Nomen, Verb oder Adjektiv? Kreise ein.", einl:"Trage die Informationen richtig ein.", test:"Löse die Aufgaben."
+};
+const WS_NOOPTS = ["zeichen","abcbuch","gegen"];
+const WS_NOMAIN = ["vfind"];
+let WS = {sel:new Set(["art","plural","abc1"]), per:6, sol:true, title:"Deutsch – Klasse 2", model:null};
+
+function toItem(m,q){
+  if(q.type==="ende"){ const s=q.text.split("|"); return {text:s.join(" "), lines:2, sol:s.map(x=>x.charAt(0).toUpperCase()+x.slice(1)+".").join(" ")}; }
+  if(q.type==="abc"){ return {text:q.words.join(",   "), slots:q.words.length, sol:abcSort(q.words).join(", ")}; }
+  let text = WS_NOMAIN.includes(m.id) ? "" : q.main.replace("___",q.small?"____":"__________");
+  const hl = text.match(/\[(.+?)\]/); if(hl) text = text.replace(/[\[\]]/g,"") + `   (Vokal: ${hl[1]})`;
+  if(q.extra) text += "   " + q.extra;
+  const opts = WS_NOOPTS.includes(m.id) ? null : q.options;
+  return {text, opts, sub: m.id==="test"?q.task:null, sol:q.answer};
+}
+function buildModel(){
+  const sections=[];
+  MODULES.filter(m=>WS.sel.has(m.id)).forEach(m=>{
+    if(m.id==="einl"){ const n=WS.per>=8?2:1; for(let i=0;i<n;i++){ const sc=einlScenario();
+        sections.push({title:"Eine Einladung schreiben", instr:WSI.einl, einl:sc, infos:shuffle(einlInfos(sc)).map(x=>x[1])}); } return; }
+    let qs=[]; const per = m.special==="ende" ? Math.min(WS.per,4) : WS.per;
+    while(qs.length<per){ qs=qs.concat(m.gen()); }
+    // doppelte vermeiden
+    const seen=new Set(); const items=[];
+    for(const q of qs){ const it=toItem(m,q); const key=it.text+(it.sub||""); if(seen.has(key)&&qs.length>per*2) continue; seen.add(key); items.push(it); if(items.length>=per) break; }
+    sections.push({title:m.title, instr:WSI[m.id]||"", items});
+  });
+  WS.model = sections;
+}
+function wsScreen(){
+  stopGame();
+  document.documentElement.style.setProperty("--accent","#4b6cb7");
+  let h=`<div class="bar"><button class="back" onclick="home()">← Zurück</button><h2 style="margin:0;font-size:24px">📝 Arbeitsblätter</h2></div>
+   <div class="panel"><h3>1. Themen auswählen</h3>`;
+  for(const s in SECS){
+    MODULES.filter(m=>m.sec===s && m.id!=="test").forEach(m=>{
+      h+=`<label class="chk"><input type="checkbox" data-id="${m.id}" ${WS.sel.has(m.id)?"checked":""}> ${esc(m.title)} <small>· ${SECS[s][0]}</small></label>`; });
+  }
+  h+=`</div><div class="panel"><h3>2. Einstellungen</h3>
+    <div class="row">Überschrift: <input type="text" id="wst" value="${esc(WS.title)}" style="flex:1;min-width:180px"></div>
+    <div class="row">Aufgaben pro Thema: <select id="wsp">${[4,6,8,10].map(n=>`<option ${n===WS.per?"selected":""}>${n}</option>`).join("")}</select></div>
+    <label class="chk" style="border:none"><input type="checkbox" id="wss" ${WS.sol?"checked":""}> Lösungsblatt hinten anhängen</label>
+    <div class="row" style="margin-top:12px"><button class="actbtn" id="wsgen">✨ Neues Blatt erstellen</button>
+    <button class="actbtn sec" id="wsdl">⬇️ Als PDF herunterladen</button></div>
+    <div id="wsmsg"></div></div>
+   <div id="preview"></div>`;
+  $("#app").innerHTML=h; window.scrollTo(0,0);
+  document.querySelectorAll(".chk input[data-id]").forEach(c=>c.onchange=()=>{ c.checked?WS.sel.add(c.dataset.id):WS.sel.delete(c.dataset.id); });
+  $("#wst").oninput=e=>WS.title=e.target.value;
+  $("#wsp").onchange=e=>WS.per=+e.target.value;
+  $("#wss").onchange=e=>{ WS.sol=e.target.checked; renderPreview(); };
+  $("#wsgen").onclick=()=>{ if(!WS.sel.size){ wsMsg("Bitte mindestens ein Thema auswählen."); return; } buildModel(); renderPreview(); wsMsg(""); };
+  $("#wsdl").onclick=downloadPdf;
+  if(WS.model) renderPreview();
+}
+function wsMsg(t){ $("#wsmsg").innerHTML = t?`<div class="msg">${t}</div>`:""; }
+function renderPreview(){
+  if(!WS.model) return;
+  let h=`<div class="sheet"><h4>${esc(WS.title)}</h4><div class="nm"><span>Name: ______________________</span><span>Datum: ____________</span></div>`;
+  WS.model.forEach((s,si)=>{
+    if(s.einl){ h+=`<div class="sec">${si+1}. ${esc(s.title)}</div>${s.infos.map(x=>`<div class="bul">• ${esc(x)}</div>`).join("")}
+        <div class="tk">${esc(s.instr)}</div><div class="boxes">${["Anrede (Liebe …)","Anlass","Tag + Datum","Uhrzeit","Adresse","Zusatzinformation","Name"].map(b=>`<div class="box">${b}</div>`).join("")}</div>
+        <div class="ins">Schreibe die Einladung nun schön auf.</div><div class="wl"></div><div class="wl"></div><div class="wl"></div><div class="wl"></div>`; return; }
+    h+=`<div class="sec">${si+1}. ${esc(s.title)}</div><div class="ins">${esc(s.instr)}</div>`;
+    s.items.forEach((it,k)=>{
+      h+=`<div class="it">${it.sub?`<span class="op">${esc(it.sub)}</span><br>`:""}${String.fromCharCode(97+k)}) ${esc(it.text)}`;
+      if(it.opts) h+=`<span class="op">( ${it.opts.map(esc).join("  /  ")} )</span>`;
+      if(it.slots) h+=`<br>${Array.from({length:it.slots},(_,i)=>`${i+1}. ____________`).join("&nbsp;&nbsp;")}`;
+      if(it.lines) h+=`<div class="wl"></div><div class="wl"></div>`;
+      h+=`</div>`;
+    });
+  });
+  h+=`</div>`;
+  if(WS.sol){
+    h+=`<div class="sheet sol"><h4>Lösungen</h4>`;
+    WS.model.forEach((s,si)=>{ h+=`<div class="sec">${si+1}. ${esc(s.title)}</div>`;
+      if(s.einl){ h+=`<div class="it">${einlSol(s.einl).map(([k,v])=>`${k}: ${esc(v)}`).join("<br>")}</div>`; return; }
+      h+=`<div class="it">${s.items.map((it,k)=>`${String.fromCharCode(97+k)}) ${esc(it.sol)}`).join("<br>")}</div>`; });
+    h+=`</div>`;
+  }
+  $("#preview").innerHTML=h;
+}
+function makePdf(){
+  const { jsPDF } = window.jspdf;
+  const doc=new jsPDF({unit:"mm",format:"a4"});
+  const L=18, W=174, BOTTOM=280; let y=20;
+  const need=h=>{ if(y+h>BOTTOM){ doc.addPage(); y=20; } };
+  const text=(t,size,style,color,indent=0)=>{ doc.setFont("helvetica",style); doc.setFontSize(size); doc.setTextColor(...color);
+    const lines=doc.splitTextToSize(t,W-indent); const lh=size*0.45; need(lines.length*lh);
+    lines.forEach(l=>{ doc.text(l,L+indent,y); y+=lh; }); };
+  // Kopf
+  text(WS.title,20,"bold",[30,30,30]); y+=2;
+  doc.setFontSize(12); doc.setFont("helvetica","normal"); doc.setTextColor(90,90,90);
+  doc.text("Name: ______________________________",L,y+4); doc.text("Datum: ________________",L+110,y+4); y+=14;
+  WS.model.forEach((s,si)=>{
+    if(s.einl){ if(y>40){ doc.addPage(); y=20; } y+=2;
+      text(`${si+1}. ${s.title}`,15,"bold",[40,60,140]); y+=2;
+      s.infos.forEach(x=>{ doc.setFillColor(30,30,30); doc.circle(L+8,y-1.4,1,"F"); text(x,13,"normal",[25,25,25],12); y+=1.2; });
+      y+=3; doc.setDrawColor(40); doc.rect(L,y,W,10); doc.setFont("helvetica","italic"); doc.setFontSize(12.5); doc.setTextColor(30,30,30); doc.text(s.instr,L+4,y+6.6); y+=14;
+      const bw=(W-6)/2, bh=30; const labels=["Anrede (Liebe ...)","Anlass","Tag + Datum","Uhrzeit","Adresse","Zusatzinformation"];
+      labels.forEach((lb,i)=>{ const x=L+(i%2)*(bw+6), yy=y+Math.floor(i/2)*(bh+5); doc.rect(x,yy,bw,bh); doc.setFont("helvetica","normal"); doc.setFontSize(12); doc.text(lb,x+3,yy+6); });
+      y+=3*(bh+5); doc.rect(L,y,bw,15); doc.text("Name",L+3,y+6); y+=21;
+      doc.setFont("helvetica","italic"); doc.setFontSize(12); doc.setTextColor(60,60,60); doc.text("Schreibe die Einladung nun schön auf.",L,y); y+=2;
+      doc.setDrawColor(150); while(y+9<BOTTOM){ y+=9; doc.line(L,y,L+W,y); }
+      y=BOTTOM; return; }
+    need(20); y+=3;
+    text(`${si+1}. ${s.title}`,15,"bold",[40,60,140]);
+    text(s.instr,11,"italic",[90,90,90]); y+=2;
+    s.items.forEach((it,k)=>{
+      if(it.sub) text(it.sub,9.5,"italic",[120,120,120],6);
+      let t=`${String.fromCharCode(97+k)})  ${it.text}`;
+      text(t,14,"normal",[25,25,25],2);
+      if(it.opts) text(`( ${it.opts.join("   /   ")} )`,12,"normal",[110,110,110],8);
+      if(it.slots){ need(10); y+=3; doc.setFontSize(12); doc.setTextColor(60,60,60);
+        const colW=W/it.slots; for(let i=0;i<it.slots;i++){ doc.text(`${i+1}.`,L+4+i*colW,y); doc.setDrawColor(150); doc.line(L+10+i*colW,y+1,L+colW-2+i*colW,y+1); } y+=6; }
+      if(it.lines){ for(let i=0;i<it.lines;i++){ need(10); y+=8; doc.setDrawColor(150); doc.line(L+4,y,L+W,y); } y+=3; }
+      y+=3.5;
+    });
+  });
+  if(WS.sol){
+    doc.addPage(); y=20; text("Lösungen",18,"bold",[30,30,30]); y+=3;
+    WS.model.forEach((s,si)=>{ need(14); y+=2; text(`${si+1}. ${s.title}`,13,"bold",[40,60,140]);
+      if(s.einl){ einlSol(s.einl).forEach(([k,v])=>text(`${k}: ${v}`,11.5,"normal",[40,40,40],4)); return; }
+      s.items.forEach((it,k)=>text(`${String.fromCharCode(97+k)})  ${it.sol}`,11.5,"normal",[40,40,40],4)); });
+  }
+  return doc;
+}
+async function downloadPdf(){
+  if(!WS.sel.size){ wsMsg("Bitte mindestens ein Thema auswählen."); return; }
+  if(!WS.model){ buildModel(); renderPreview(); }
+  if(!window.jspdf){ wsMsg("Der PDF-Baustein konnte nicht geladen werden. Bitte die Seite neu laden."); return; }
+  const d=new Date(); const name=`Arbeitsblatt-${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}.pdf`;
+  let dl=null; try{ dl = window.claude ? await claude.use("downloads") : null; }catch(e){}
+  if(!dl){
+    // Eigenständige Webseite (z. B. Netlify / Google Sites): normaler Browser-Download
+    try{
+      const doc=makePdf(); doc.save(name);
+      const url=doc.output("bloburl");
+      wsMsg(`✅ Das PDF wird heruntergeladen. Klappt es nicht? <a href="${url}" target="_blank" rel="noopener">PDF in neuem Tab öffnen</a> und dort drucken oder speichern.`);
+    }catch(e){ wsMsg("Das PDF konnte nicht erstellt werden. Bitte die Seite neu laden."); }
+    return;
+  }
+  try{
+    const buf=makePdf().output("arraybuffer");
+    await dl.save({filename:name,data:buf}); wsMsg("✅ Das Arbeitsblatt wurde gespeichert.");
+  }catch(e){ if(e&&e.code==="declined") wsMsg("Download abgebrochen."); else wsMsg("Das Speichern hat nicht geklappt. Bitte nochmal versuchen."); }
+}
+
+/* ---------- Spiele ---------- */
+const GAME_COST = 3;
+let gameTimers=[], gameRAF=null;
+function stopGame(){ gameTimers.forEach(t=>{clearInterval(t);clearTimeout(t);}); gameTimers=[]; if(gameRAF) cancelAnimationFrame(gameRAF); gameRAF=null; }
+function hs(k,v){ try{ const o=JSON.parse(localStorage.getItem("sprachheft2_hs")||"{}"); if(v!==undefined){ o[k]=v; localStorage.setItem("sprachheft2_hs",JSON.stringify(o)); } return o[k]; }catch(e){ return undefined; } }
+const GAMES = [
+  {id:"ballon",em:"🎈",title:"Ballon-Platzen",desc:"Lass in 30 Sekunden so viele Ballons platzen wie möglich!",run:gameBallon,best:"Punkte",higher:true},
+  {id:"memory",em:"🃏",title:"Tier-Memory",desc:"Finde alle Tier-Paare mit möglichst wenigen Zügen.",run:gameMemory,best:"Züge",higher:false},
+  {id:"maulwurf",em:"🐹",title:"Hamster fangen",desc:"Tippe schnell auf die Hamster, bevor sie verschwinden!",run:gameMaulwurf,best:"Punkte",higher:true}
+];
+function gamesScreen(msg){
+  stopGame();
+  const c=getCoins();
+  let h=`<div class="bar"><button class="back" onclick="home()">← Zurück</button><h2 style="margin:0;font-size:24px;flex:1">🎮 Spiele</h2><span class="coins">🪙 ${c}</span></div>
+   <div class="rule" style="--accent:#e2843a;border-color:#e2843a">Jedes Spiel kostet <b>${GAME_COST} 🪙</b>. Münzen bekommst du für jeden Stern beim Üben – bei 3 Sternen gibt es eine Extra-Münze!</div>
+   ${msg?`<div class="msg" style="margin-bottom:12px">${msg}</div>`:""}
+   <div class="gamegrid">`;
+  GAMES.forEach(g=>{ const b=hs(g.id);
+    h+=`<div class="gtile"><div class="em">${g.em}</div><b>${g.title}</b><small>${g.desc}</small>
+      <small>Rekord: ${b!==undefined?b+" "+g.best:"–"}</small>
+      <button class="actbtn" style="background:#e2843a;${c<GAME_COST?'opacity:.45':''}" onclick="playGame('${g.id}')">Spielen (${GAME_COST} 🪙)</button></div>`; });
+  h+=`</div>`;
+  $("#app").innerHTML=h; window.scrollTo(0,0);
+}
+function playGame(id){
+  const c=getCoins();
+  if(c<GAME_COST){ gamesScreen(`Du brauchst noch ${GAME_COST-c} 🪙. Löse ein paar Übungen, dann kannst du spielen! 💪`); return; }
+  setCoins(c-GAME_COST);
+  GAMES.find(g=>g.id===id).run();
+}
+function gameEnd(id,score,text){
+  stopGame();
+  const g=GAMES.find(x=>x.id===id); const old=hs(id);
+  const rec = old===undefined || (g.higher? score>old : score<old);
+  if(rec) hs(id,score);
+  $("#app").innerHTML=`<div class="endcard pop" style="--accent:#e2843a"><div style="font-size:60px">${g.em}</div>
+    <div style="font-size:26px;font-weight:700">${text}</div>${rec?`<p style="font-size:22px">🏆 Neuer Rekord!</p>`:`<p>Rekord: ${old} ${g.best}</p>`}
+    <div class="endbtns"><button class="p" onclick="playGame('${id}')">Nochmal (${GAME_COST} 🪙)</button><button class="s" onclick="gamesScreen()">Zu den Spielen</button><button class="s" onclick="home()">Weiter üben</button></div></div>`;
+}
+function gameHeader(id){
+  return `<div class="bar"><button class="back" onclick="gamesScreen()">← Beenden</button><h2 style="margin:0;font-size:22px">${GAMES.find(g=>g.id===id).title}</h2></div>`;
+}
+function gameBallon(){
+  let score=0, left=30; const colors=["🎈"];
+  $("#app").innerHTML=gameHeader("ballon")+`<div class="hud"><span>⭐ <span id="sc">0</span></span><span>⏱️ <span id="tm">30</span></span></div><div class="arena" id="ar"></div>`;
+  const ar=$("#ar"); const balloons=[];
+  const spawn=()=>{ const b=document.createElement("div"); b.className="balloon";
+    const gold=Math.random()<.12; b.textContent=gold?"⭐":"🎈";
+    if(!gold) b.style.filter=`hue-rotate(${Math.floor(Math.random()*360)}deg)`;
+    const o={el:b,x:Math.random()*(ar.clientWidth-60),y:ar.clientHeight,v:1.2+Math.random()*1.8+(30-left)*0.06,pts:gold?3:1};
+    b.style.left=o.x+"px"; b.style.top=o.y+"px";
+    const hit=e=>{ e.preventDefault(); if(o.dead) return; o.dead=true; score+=o.pts; $("#sc").textContent=score; b.textContent="💥"; b.style.filter=""; setTimeout(()=>b.remove(),200); };
+    b.addEventListener("pointerdown",hit); ar.appendChild(b); balloons.push(o); };
+  const loop=()=>{ balloons.forEach(o=>{ if(o.dead) return; o.y-=o.v; o.el.style.top=o.y+"px"; if(o.y<-70){ o.dead=true; o.el.remove(); } }); gameRAF=requestAnimationFrame(loop); };
+  gameRAF=requestAnimationFrame(loop);
+  gameTimers.push(setInterval(spawn,550));
+  gameTimers.push(setInterval(()=>{ left--; $("#tm").textContent=left; if(left<=0) gameEnd("ballon",score,`${score} Punkte!`); },1000));
+}
+function gameMemory(){
+  const animals=pick(["🐶","🐱","🐰","🦊","🐻","🐼","🐸","🦁","🐵","🐷","🐮","🐯","🦉","🐢"],8);
+  const cards=shuffle([...animals,...animals]); let open=[], moves=0, found=0, lock=false;
+  $("#app").innerHTML=gameHeader("memory")+`<div class="hud"><span>Züge: <span id="mv">0</span></span><span>Paare: <span id="fd">0</span>/8</span></div>
+    <div class="mem">${cards.map((c,k)=>`<button class="card" data-k="${k}">${c}</button>`).join("")}</div>`;
+  document.querySelectorAll(".card").forEach(b=>b.onclick=()=>{
+    if(lock||b.classList.contains("open")||b.classList.contains("done")) return;
+    b.classList.add("open"); open.push(b);
+    if(open.length===2){ moves++; $("#mv").textContent=moves; const [a,c]=open;
+      if(a.textContent===c.textContent){ a.className=c.className="card done"; open=[]; found++; $("#fd").textContent=found;
+        if(found===8) gameTimers.push(setTimeout(()=>gameEnd("memory",moves,`Geschafft in ${moves} Zügen!`),600)); }
+      else { lock=true; gameTimers.push(setTimeout(()=>{ a.classList.remove("open"); c.classList.remove("open"); open=[]; lock=false; },800)); } }
+  });
+}
+function gameMaulwurf(){
+  let score=0, left=30;
+  $("#app").innerHTML=gameHeader("maulwurf")+`<div class="hud"><span>⭐ <span id="sc">0</span></span><span>⏱️ <span id="tm">30</span></span></div>
+    <div class="holes">${Array.from({length:9},(_,k)=>`<button class="hole" data-k="${k}"></button>`).join("")}</div>`;
+  const holes=[...document.querySelectorAll(".hole")];
+  holes.forEach(h=>h.addEventListener("pointerdown",e=>{ e.preventDefault(); if(h.dataset.on==="1"){ h.dataset.on="0"; score+=h.dataset.g==="1"?3:1; $("#sc").textContent=score; h.textContent="💫"; setTimeout(()=>{ if(h.dataset.on!=="1") h.textContent=""; },250); } }));
+  const pop=()=>{ const free=holes.filter(h=>h.dataset.on!=="1"); if(!free.length) return; const h=free[Math.floor(Math.random()*free.length)];
+    const gold=Math.random()<.12; h.dataset.on="1"; h.dataset.g=gold?"1":"0"; h.textContent=gold?"🌟":"🐹";
+    const stay=Math.max(500,1000-(30-left)*15);
+    gameTimers.push(setTimeout(()=>{ if(h.dataset.on==="1"){ h.dataset.on="0"; h.textContent=""; } },stay)); };
+  gameTimers.push(setInterval(pop,650));
+  gameTimers.push(setInterval(()=>{ left--; $("#tm").textContent=left; if(left<=0) gameEnd("maulwurf",score,`${score} Punkte!`); },1000));
+}
+
+home();
+</script>
+</body>
+</html>
