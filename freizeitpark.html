@@ -2998,5 +2998,46 @@ setInterval(updScrollHints,700);
 window.addEventListener('resize',()=>{updScrollHints();resize();if(MG)mgResize();if(FP)fpResize();});
 resize(); renderCats(); renderItems(); showTitle(); requestAnimationFrame(frame);
 </script>
+<style>
+/* PC mit Maus: dünne Scrollleiste anzeigen */
+@media (hover:hover) and (pointer:fine){
+  #top,#cats,#items{scrollbar-width:thin;scrollbar-color:#ffffff55 transparent}
+  #top::-webkit-scrollbar,#cats::-webkit-scrollbar,#items::-webkit-scrollbar{display:block;height:5px}
+  #top::-webkit-scrollbar-thumb,#cats::-webkit-scrollbar-thumb,#items::-webkit-scrollbar-thumb{background:#ffffff55;border-radius:3px}
+  #top.ziehen,#cats.ziehen,#items.ziehen{cursor:grabbing}
+}
+</style>
+<script>
+/* Leisten oben und unten am PC bewegen: Mausrad und Ziehen mit der Maus */
+(function(){
+  ['top','cats','items'].forEach(function(id){
+    var el=document.getElementById(id); if(!el) return;
+    el.addEventListener('wheel',function(e){
+      if(el.scrollWidth<=el.clientWidth) return;
+      var d=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.deltaY;
+      if(!d) return;
+      e.preventDefault(); e.stopPropagation();
+      el.scrollLeft+=d*(e.deltaMode===1?30:1);
+    },{passive:false});
+    var start=null, gezogen=false;
+    el.addEventListener('pointerdown',function(e){
+      if(e.pointerType!=='mouse'||e.button!==0) return;
+      start={x:e.clientX,l:el.scrollLeft}; gezogen=false;
+    });
+    window.addEventListener('pointermove',function(e){
+      if(!start) return;
+      var dx=e.clientX-start.x;
+      if(!gezogen&&Math.abs(dx)>6){gezogen=true;el.classList.add('ziehen');}
+      if(gezogen) el.scrollLeft=start.l-dx;
+    });
+    window.addEventListener('pointerup',function(){
+      if(!start) return; start=null; el.classList.remove('ziehen');
+      if(gezogen) setTimeout(function(){gezogen=false;},0);
+    });
+    // nach dem Ziehen keinen Knopf auslösen
+    el.addEventListener('click',function(e){ if(gezogen){e.preventDefault();e.stopPropagation();} },true);
+  });
+})();
+</script>
 </body>
 </html>
